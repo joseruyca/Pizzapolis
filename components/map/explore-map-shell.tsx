@@ -3,9 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { PlacesMap } from '@/components/map/places-map'
-import { MapPriceLegend } from '@/components/map/map-price-legend'
 import { AddPinFab } from '@/components/map/add-pin-fab'
-import { PlaceOverlayPanel } from '@/components/places/place-overlay-panel'
 import { PlaceListDrawer } from '@/components/map/place-list-drawer'
 import { MapFiltersPanel } from '@/components/map/map-filters-panel'
 import { PlacesList } from '@/components/places/places-list'
@@ -56,7 +54,6 @@ export function ExploreMapShell({
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [listOpen, setListOpen] = useState(false)
   const [locating, setLocating] = useState(false)
-  const featuredPlace = places[0] ?? null
 
   function useMyLocation() {
     if (!navigator.geolocation) {
@@ -160,10 +157,6 @@ export function ExploreMapShell({
               </div>
             ) : null}
 
-            <div className='absolute left-4 top-28 z-[500] hidden max-w-xs lg:block'>
-              <MapPriceLegend />
-            </div>
-
             <button
               type='button'
               onClick={useMyLocation}
@@ -174,10 +167,6 @@ export function ExploreMapShell({
             >
               {locating ? '…' : '◎'}
             </button>
-
-            <div className='absolute bottom-20 left-4 z-[500] hidden max-w-sm lg:block'>
-              <PlaceOverlayPanel place={featuredPlace} />
-            </div>
 
             <div className='absolute bottom-20 right-4 z-[500]'>
               <AddPinFab />

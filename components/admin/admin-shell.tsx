@@ -4,12 +4,15 @@ import { getCurrentUserWithRole } from '@/lib/auth/is-admin'
 
 const nav = [
   { href: '/admin/dashboard', label: 'Dashboard' },
+  { href: '/admin/analytics', label: 'Analytics' },
   { href: '/admin/places', label: 'Places' },
   { href: '/admin/guides', label: 'Guides' },
   { href: '/admin/moderation', label: 'Moderation' },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/reports', label: 'Reports' },
   { href: '/admin/offers', label: 'Offers' },
+  { href: '/admin/banners', label: 'Banners' },
+  { href: '/admin/submissions', label: 'Submissions' },
   { href: '/admin/settings', label: 'Settings' },
 ]
 

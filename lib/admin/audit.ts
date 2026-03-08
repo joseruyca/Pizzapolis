@@ -23,6 +23,10 @@ export async function logAdminAction({
     action,
     entity_type: entityType,
     entity_id: entityId ?? null,
-    meta: meta ?? {},
+    meta: {
+      ...(meta ?? {}),
+      actor_email: session.user.email ?? null,
+      at: new Date().toISOString(),
+    },
   })
 }
