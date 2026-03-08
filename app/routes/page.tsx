@@ -149,7 +149,7 @@ export default async function RoutesPage() {
         `)
         .in('route_id', routeIds)
         .order('sort_order', { ascending: true })
-    : { data: [], error: null }
+    : { data: [] }
 
   const routeStops = (routeStopsRaw ?? []) as unknown as RouteStopRow[]
 
@@ -246,3 +246,4 @@ export default async function RoutesPage() {
     </main>
   )
 }
+
