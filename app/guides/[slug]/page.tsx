@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { AppHeader } from '@/components/layout/app-header'
 import { createPublicClient } from '@/lib/supabase/public'
 
-type GuidePlace = {
+type GuidePlaceItem = {
   sort_order: number
   place: {
     id: string
@@ -19,17 +19,19 @@ type GuidePlace = {
     pizza_style: string | null
     best_known_for: string | null
     hero_image_url: string | null
-  }
+  } | null
 }
 
 function GuidePlaceCard({
   item,
   index,
 }: {
-  item: GuidePlace
+  item: GuidePlaceItem
   index: number
 }) {
   const place = item.place
+
+  if (!place) return null
 
   return (
     <Link
@@ -123,7 +125,7 @@ export default async function GuideDetailPage({
     notFound()
   }
 
-  const { data: guidePlaces, error: placesError } = await supabase
+  const { data: guidePlacesRaw, error: placesError } = await supabase
     .from('guide_places')
     .select(`
       sort_order,
@@ -145,6 +147,8 @@ export default async function GuideDetailPage({
     `)
     .eq('guide_id', guide.id)
     .order('sort_order', { ascending: true })
+
+  const guidePlaces = (guidePlacesRaw ?? []) as unknown as GuidePlaceItem[]
 
   return (
     <main className='min-h-screen bg-black text-white'>
@@ -181,13 +185,15 @@ export default async function GuideDetailPage({
           ) : null}
 
           <div className='mt-10 space-y-6'>
-            {(guidePlaces ?? []).map((item, index) => (
-              <GuidePlaceCard
-                key={`${item.sort_order}-${(item.place as { slug: string }).slug}`}
-                item={item as GuidePlace}
-                index={index}
-              />
-            ))}
+            {guidePlaces.map((item, index) =>
+              item.place ? (
+                <GuidePlaceCard
+                  key={`${item.sort_order}-${item.place.slug}`}
+                  item={item}
+                  index={index}
+                />
+              ) : null
+            )}
           </div>
         </div>
       </div>

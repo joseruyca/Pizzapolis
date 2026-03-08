@@ -11,6 +11,13 @@ const roleRank: Record<AppRole, number> = {
   admin: 3,
 }
 
+function normalizeRole(role: unknown): AppRole {
+  if (role === 'moderator' || role === 'editor' || role === 'admin') {
+    return role
+  }
+  return 'user'
+}
+
 export async function getCurrentUserWithRole() {
   const supabase = await createClient()
 
@@ -33,7 +40,7 @@ export async function getCurrentUserWithRole() {
     .eq('user_id', user.id)
     .maybeSingle()
 
-  const role = (adminRow?.role as AdminRole | undefined) ?? 'user'
+  const role = normalizeRole(adminRow?.role)
 
   return {
     user,
