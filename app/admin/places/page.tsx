@@ -10,14 +10,39 @@ export default async function AdminPlacesPage() {
 
   const { data: places, error } = await supabase
     .from('places')
-    .select('id, slug, name, borough, neighborhood, pizza_style, best_known_for, cheapest_slice_price, whole_pie_price, value_score, is_best_under_5, is_best_under_10, price_range, average_rating, is_deleted, deleted_at')
+    .select(`
+      id,
+      slug,
+      name,
+      borough,
+      neighborhood,
+      pizza_style,
+      best_known_for,
+      best_slice,
+      best_whole_pie,
+      first_order_recommendation,
+      why_go,
+      price_confidence,
+      cheapest_slice_price,
+      whole_pie_price,
+      value_score,
+      is_best_under_5,
+      is_best_under_10,
+      is_late_night,
+      is_worth_the_trip,
+      is_first_timer_friendly,
+      price_range,
+      average_rating,
+      is_deleted,
+      deleted_at
+    `)
     .order('average_rating', { ascending: false })
     .limit(60)
 
   return (
     <AdminShell
       title='Places'
-      description='Edit places, pricing intelligence and soft delete/restore them.'
+      description='Edit places, pricing intelligence and decision-making content.'
     >
       {error ? (
         <div className='rounded-2xl border border-red-900 bg-red-950 p-4 text-red-200'>
@@ -46,10 +71,22 @@ export default async function AdminPlacesPage() {
                 <input name='borough' defaultValue={place.borough ?? ''} className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
                 <input name='pizza_style' defaultValue={place.pizza_style ?? ''} className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
                 <input name='best_known_for' defaultValue={place.best_known_for ?? ''} className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
+                <input name='best_slice' defaultValue={place.best_slice ?? ''} placeholder='Best slice' className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
+                <input name='best_whole_pie' defaultValue={place.best_whole_pie ?? ''} placeholder='Best whole pie' className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
+                <input name='first_order_recommendation' defaultValue={place.first_order_recommendation ?? ''} placeholder='First order recommendation' className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
                 <input name='cheapest_slice_price' type='number' step='0.01' defaultValue={place.cheapest_slice_price ?? ''} className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
                 <input name='whole_pie_price' type='number' step='0.01' defaultValue={place.whole_pie_price ?? ''} className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
                 <input name='value_score' type='number' step='0.1' defaultValue={place.value_score ?? ''} className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
+                <input name='price_confidence' defaultValue={place.price_confidence ?? ''} placeholder='Price confidence' className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
               </div>
+
+              <textarea
+                name='why_go'
+                defaultValue={place.why_go ?? ''}
+                rows={3}
+                placeholder='Why go'
+                className='w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white'
+              />
 
               <div className='flex flex-wrap gap-6'>
                 <label className='flex items-center gap-2 text-sm text-zinc-300'>
@@ -60,6 +97,21 @@ export default async function AdminPlacesPage() {
                 <label className='flex items-center gap-2 text-sm text-zinc-300'>
                   <input type='checkbox' name='is_best_under_10' defaultChecked={place.is_best_under_10 ?? false} />
                   Best under $10
+                </label>
+
+                <label className='flex items-center gap-2 text-sm text-zinc-300'>
+                  <input type='checkbox' name='is_late_night' defaultChecked={place.is_late_night ?? false} />
+                  Late night
+                </label>
+
+                <label className='flex items-center gap-2 text-sm text-zinc-300'>
+                  <input type='checkbox' name='is_worth_the_trip' defaultChecked={place.is_worth_the_trip ?? false} />
+                  Worth the trip
+                </label>
+
+                <label className='flex items-center gap-2 text-sm text-zinc-300'>
+                  <input type='checkbox' name='is_first_timer_friendly' defaultChecked={place.is_first_timer_friendly ?? false} />
+                  First-timer friendly
                 </label>
               </div>
 

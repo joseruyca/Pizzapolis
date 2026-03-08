@@ -16,6 +16,12 @@ export async function updatePlaceBasics(formData: FormData) {
   const pizza_style = String(formData.get('pizza_style') || '').trim()
   const best_known_for = String(formData.get('best_known_for') || '').trim()
 
+  const best_slice = String(formData.get('best_slice') || '').trim()
+  const best_whole_pie = String(formData.get('best_whole_pie') || '').trim()
+  const first_order_recommendation = String(formData.get('first_order_recommendation') || '').trim()
+  const why_go = String(formData.get('why_go') || '').trim()
+  const price_confidence = String(formData.get('price_confidence') || '').trim()
+
   const cheapest_slice_price_raw = String(formData.get('cheapest_slice_price') || '').trim()
   const whole_pie_price_raw = String(formData.get('whole_pie_price') || '').trim()
   const value_score_raw = String(formData.get('value_score') || '').trim()
@@ -26,6 +32,9 @@ export async function updatePlaceBasics(formData: FormData) {
 
   const is_best_under_5 = String(formData.get('is_best_under_5') || '') === 'on'
   const is_best_under_10 = String(formData.get('is_best_under_10') || '') === 'on'
+  const is_late_night = String(formData.get('is_late_night') || '') === 'on'
+  const is_worth_the_trip = String(formData.get('is_worth_the_trip') || '') === 'on'
+  const is_first_timer_friendly = String(formData.get('is_first_timer_friendly') || '') === 'on'
 
   const price_range =
     cheapest_slice_price === null
@@ -44,11 +53,19 @@ export async function updatePlaceBasics(formData: FormData) {
       borough: borough || null,
       pizza_style: pizza_style || null,
       best_known_for: best_known_for || null,
+      best_slice: best_slice || null,
+      best_whole_pie: best_whole_pie || null,
+      first_order_recommendation: first_order_recommendation || null,
+      why_go: why_go || null,
+      price_confidence: price_confidence || null,
       cheapest_slice_price,
       whole_pie_price,
       value_score,
       is_best_under_5,
       is_best_under_10,
+      is_late_night,
+      is_worth_the_trip,
+      is_first_timer_friendly,
       price_range,
       price_updated_at: cheapest_slice_price !== null ? new Date().toISOString() : null,
     })
@@ -64,13 +81,12 @@ export async function updatePlaceBasics(formData: FormData) {
       cheapest_slice_price,
       whole_pie_price,
       value_score,
-      is_best_under_5,
-      is_best_under_10,
     },
   })
 
   revalidatePath('/admin/places')
   revalidatePath('/explorar')
+  revalidatePath(`/places`)
 }
 
 export async function deletePlace(formData: FormData) {

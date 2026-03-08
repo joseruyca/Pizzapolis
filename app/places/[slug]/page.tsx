@@ -6,6 +6,29 @@ import { createClient as createServerSupabase } from '@/lib/supabase/server'
 import { PlaceDetailTabs } from '@/components/places/place-detail-tabs'
 import { getRelativeTimeLabel } from '@/lib/time'
 
+function InfoBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <div className='inline-flex rounded-full border border-red-900/60 bg-[rgba(120,10,10,0.15)] px-3 py-1 text-xs font-semibold text-red-300'>
+      {children}
+    </div>
+  )
+}
+
+function InfoCard({
+  label,
+  value,
+}: {
+  label: string
+  value: React.ReactNode
+}) {
+  return (
+    <div className='rounded-2xl border border-zinc-800 bg-zinc-950 p-5'>
+      <p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>{label}</p>
+      <div className='mt-3 text-white'>{value}</div>
+    </div>
+  )
+}
+
 export default async function PlaceDetailPage({
   params,
   searchParams,
@@ -96,7 +119,7 @@ export default async function PlaceDetailPage({
       <AppHeader />
 
       <div className='min-h-screen bg-[linear-gradient(180deg,rgba(60,0,0,0.42),rgba(0,0,0,0.96)_28%)]'>
-        <div className='mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8'>
+        <div className='mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8'>
           {queryParams.success ? (
             <div className='mb-4 rounded-2xl border border-emerald-900 bg-emerald-950 p-4 text-emerald-200'>
               {queryParams.success}
@@ -130,21 +153,12 @@ export default async function PlaceDetailPage({
               </div>
 
               <div className='flex flex-wrap gap-2'>
-                <div className='inline-flex rounded-lg border border-red-900/60 bg-[rgba(120,10,10,0.15)] px-3 py-1 text-xs font-medium text-zinc-200'>
-                  {place.pizza_style || 'Classic NY Slice'}
-                </div>
-
-                {place.is_best_under_5 ? (
-                  <div className='inline-flex rounded-full border border-red-900/60 bg-[rgba(120,10,10,0.15)] px-3 py-1 text-xs font-semibold text-red-300'>
-                    Best under $5
-                  </div>
-                ) : null}
-
-                {place.is_best_under_10 ? (
-                  <div className='inline-flex rounded-full border border-red-900/60 bg-[rgba(120,10,10,0.15)] px-3 py-1 text-xs font-semibold text-red-300'>
-                    Best under $10
-                  </div>
-                ) : null}
+                <InfoBadge>{place.pizza_style || 'Classic NY Slice'}</InfoBadge>
+                {place.is_best_under_5 ? <InfoBadge>Best under $5</InfoBadge> : null}
+                {place.is_best_under_10 ? <InfoBadge>Best under $10</InfoBadge> : null}
+                {place.is_late_night ? <InfoBadge>Late night</InfoBadge> : null}
+                {place.is_worth_the_trip ? <InfoBadge>Worth the trip</InfoBadge> : null}
+                {place.is_first_timer_friendly ? <InfoBadge>First-timer friendly</InfoBadge> : null}
               </div>
 
               <h1 className='mt-5 text-5xl font-bold tracking-tight text-white'>
@@ -175,46 +189,84 @@ export default async function PlaceDetailPage({
               </div>
 
               <div className='mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
-                <div className='rounded-2xl border border-zinc-800 bg-zinc-950 p-5'>
-                  <p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>
-                    Cheapest slice
-                  </p>
-                  <p className='mt-3 text-2xl font-bold text-white'>
-                    {typeof place.cheapest_slice_price === 'number'
+                <InfoCard
+                  label='Cheapest slice'
+                  value={
+                    typeof place.cheapest_slice_price === 'number'
                       ? `$${place.cheapest_slice_price}`
-                      : '—'}
-                  </p>
-                </div>
-
-                <div className='rounded-2xl border border-zinc-800 bg-zinc-950 p-5'>
-                  <p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>
-                    Whole pie
-                  </p>
-                  <p className='mt-3 text-2xl font-bold text-white'>
-                    {typeof place.whole_pie_price === 'number'
+                      : '—'
+                  }
+                />
+                <InfoCard
+                  label='Whole pie'
+                  value={
+                    typeof place.whole_pie_price === 'number'
                       ? `$${place.whole_pie_price}`
-                      : '—'}
-                  </p>
-                </div>
-
-                <div className='rounded-2xl border border-zinc-800 bg-zinc-950 p-5'>
-                  <p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>
-                    Value score
-                  </p>
-                  <p className='mt-3 text-2xl font-bold text-white'>
-                    {typeof place.value_score === 'number'
+                      : '—'
+                  }
+                />
+                <InfoCard
+                  label='Value score'
+                  value={
+                    typeof place.value_score === 'number'
                       ? `${place.value_score}/10`
-                      : '—'}
-                  </p>
-                </div>
+                      : '—'
+                  }
+                />
+                <InfoCard
+                  label='Price updated'
+                  value={getRelativeTimeLabel(place.price_updated_at)}
+                />
+              </div>
+
+              <div className='mt-8 grid gap-4 lg:grid-cols-2'>
+                <InfoCard
+                  label='Best slice'
+                  value={place.best_slice || place.best_known_for || '—'}
+                />
+                <InfoCard
+                  label='Best whole pie'
+                  value={place.best_whole_pie || '—'}
+                />
+                <InfoCard
+                  label='First order recommendation'
+                  value={place.first_order_recommendation || place.best_known_for || '—'}
+                />
+                <InfoCard
+                  label='Price confidence'
+                  value={place.price_confidence || 'Recently updated'}
+                />
+              </div>
+
+              <div className='mt-8 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]'>
+                <InfoCard
+                  label='Why go'
+                  value={
+                    <p className='leading-7 text-zinc-200'>
+                      {place.why_go || 'A solid stop if you want a dependable slice with clear value and an easy recommendation.'}
+                    </p>
+                  }
+                />
 
                 <div className='rounded-2xl border border-zinc-800 bg-zinc-950 p-5'>
-                  <p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>
-                    Price updated
-                  </p>
-                  <p className='mt-3 text-base font-medium text-white'>
-                    {getRelativeTimeLabel(place.price_updated_at)}
-                  </p>
+                  <p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>Quick actions</p>
+                  <div className='mt-4 flex flex-col gap-3'>
+                    <a
+                      href={googleMapsUrl}
+                      target='_blank'
+                      rel='noreferrer'
+                      className='inline-flex items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-medium text-black transition hover:opacity-90'
+                    >
+                      Open in Google Maps
+                    </a>
+
+                    <Link
+                      href='/routes'
+                      className='inline-flex items-center justify-center rounded-2xl border border-zinc-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-900'
+                    >
+                      Browse routes
+                    </Link>
+                  </div>
                 </div>
               </div>
 
