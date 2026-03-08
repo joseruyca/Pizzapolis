@@ -18,7 +18,28 @@ function normalizeRole(role: unknown): AppRole {
   return 'user'
 }
 
+function getDevBypassSession() {
+  const bypassEnabled =
+    process.env.NODE_ENV !== 'production' &&
+    process.env.DEV_ADMIN_BYPASS === 'true'
+
+  if (!bypassEnabled) return null
+
+  return {
+    user: {
+      id: 'dev-admin-bypass',
+      email: 'dev-admin@local.test',
+    } as any,
+    role: 'admin' as AppRole,
+    isStaff: true,
+    isAdmin: true,
+  }
+}
+
 export async function getCurrentUserWithRole() {
+  const devSession = getDevBypassSession()
+  if (devSession) return devSession
+
   const supabase = await createClient()
 
   const {
@@ -51,6 +72,9 @@ export async function getCurrentUserWithRole() {
 }
 
 export async function requireRole(minRole: AppRole) {
+  const devSession = getDevBypassSession()
+  if (devSession) return devSession
+
   const session = await getCurrentUserWithRole()
 
   if (!session.user) {
