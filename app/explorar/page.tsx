@@ -25,6 +25,10 @@ type PlaceRow = {
   longitude: number
   hero_image_url: string | null
   cheapest_slice_price: number | null
+  whole_pie_price: number | null
+  value_score: number | null
+  is_best_under_5: boolean | null
+  is_best_under_10: boolean | null
   pizza_style: string | null
   best_known_for: string | null
   price_updated_at: string | null
@@ -56,7 +60,7 @@ export default async function ExplorePage({
   let query = supabase
     .from('places')
     .select(
-      'id, slug, name, borough, neighborhood, address, description, price_range, style_tags, average_rating, review_count, latitude, longitude, hero_image_url, cheapest_slice_price, pizza_style, best_known_for, price_updated_at, created_at'
+      'id, slug, name, borough, neighborhood, address, description, price_range, style_tags, average_rating, review_count, latitude, longitude, hero_image_url, cheapest_slice_price, whole_pie_price, value_score, is_best_under_5, is_best_under_10, pizza_style, best_known_for, price_updated_at, created_at'
     )
 
   if (params.q) {

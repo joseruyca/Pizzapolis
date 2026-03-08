@@ -15,9 +15,18 @@ export async function updatePlaceBasics(formData: FormData) {
   const borough = String(formData.get('borough') || '').trim()
   const pizza_style = String(formData.get('pizza_style') || '').trim()
   const best_known_for = String(formData.get('best_known_for') || '').trim()
+
   const cheapest_slice_price_raw = String(formData.get('cheapest_slice_price') || '').trim()
+  const whole_pie_price_raw = String(formData.get('whole_pie_price') || '').trim()
+  const value_score_raw = String(formData.get('value_score') || '').trim()
 
   const cheapest_slice_price = cheapest_slice_price_raw ? Number(cheapest_slice_price_raw) : null
+  const whole_pie_price = whole_pie_price_raw ? Number(whole_pie_price_raw) : null
+  const value_score = value_score_raw ? Number(value_score_raw) : null
+
+  const is_best_under_5 = String(formData.get('is_best_under_5') || '') === 'on'
+  const is_best_under_10 = String(formData.get('is_best_under_10') || '') === 'on'
+
   const price_range =
     cheapest_slice_price === null
       ? null
@@ -36,6 +45,10 @@ export async function updatePlaceBasics(formData: FormData) {
       pizza_style: pizza_style || null,
       best_known_for: best_known_for || null,
       cheapest_slice_price,
+      whole_pie_price,
+      value_score,
+      is_best_under_5,
+      is_best_under_10,
       price_range,
       price_updated_at: cheapest_slice_price !== null ? new Date().toISOString() : null,
     })
@@ -49,7 +62,10 @@ export async function updatePlaceBasics(formData: FormData) {
       actor: session.user.email,
       name,
       cheapest_slice_price,
-      price_range,
+      whole_pie_price,
+      value_score,
+      is_best_under_5,
+      is_best_under_10,
     },
   })
 

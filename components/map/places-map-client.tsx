@@ -19,6 +19,10 @@ type Place = {
   review_count: number | null
   price_range?: string | null
   cheapest_slice_price?: number | null
+  whole_pie_price?: number | null
+  value_score?: number | null
+  is_best_under_5?: boolean | null
+  is_best_under_10?: boolean | null
   pizza_style?: string | null
   best_known_for?: string | null
   price_updated_at?: string | null
@@ -83,6 +87,24 @@ function makePinHtml(label: string, color: 'green' | 'yellow' | 'red') {
         border-right:3px solid white;
       "></div>
     </div>
+  `
+}
+
+function badgeHtml(label: string) {
+  return `
+    <span style="
+      display:inline-flex;
+      align-items:center;
+      border:1px solid rgba(127,29,29,.45);
+      background:rgba(120,10,10,.08);
+      border-radius:9999px;
+      padding:4px 8px;
+      font-size:11px;
+      font-weight:700;
+      color:#991b1b;
+      margin-right:6px;
+      margin-bottom:6px;
+    ">${label}</span>
   `
 }
 
@@ -197,22 +219,33 @@ export function PlacesMapClient({
             icon={icons[place.id]}
           >
             <Popup>
-              <div style={{ width: '240px' }}>
-                {place.pizza_style ? (
-                  <div style={{
-                    display: 'inline-flex',
-                    border: '1px solid rgba(127,29,29,.45)',
-                    background: 'rgba(120,10,10,.08)',
-                    borderRadius: '10px',
-                    padding: '4px 8px',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    color: '#1f2937',
-                    marginBottom: '10px'
-                  }}>
-                    {place.pizza_style}
+              <div style={{ width: '260px' }}>
+                <div style={{ marginBottom: '10px' }}>
+                  {place.pizza_style ? (
+                    <div style={{
+                      display: 'inline-flex',
+                      border: '1px solid rgba(127,29,29,.45)',
+                      background: 'rgba(120,10,10,.08)',
+                      borderRadius: '10px',
+                      padding: '4px 8px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: '#1f2937',
+                      marginBottom: '8px'
+                    }}>
+                      {place.pizza_style}
+                    </div>
+                  ) : null}
+
+                  <div>
+                    {place.is_best_under_5 ? (
+                      <span dangerouslySetInnerHTML={{ __html: badgeHtml('Best under $5') }} />
+                    ) : null}
+                    {place.is_best_under_10 ? (
+                      <span dangerouslySetInnerHTML={{ __html: badgeHtml('Best under $10') }} />
+                    ) : null}
                   </div>
-                ) : null}
+                </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
                   <div>
@@ -253,6 +286,26 @@ export function PlacesMapClient({
                   <span style={{ fontSize: '13px', color: '#6b7280' }}>
                     {place.review_count ?? 0} ratings
                   </span>
+                </div>
+
+                <div style={{ marginTop: '14px', display: 'grid', gap: '8px' }}>
+                  {typeof place.cheapest_slice_price === 'number' ? (
+                    <p style={{ margin: 0, fontSize: '13px', color: '#374151' }}>
+                      <strong>Cheapest slice:</strong> ${place.cheapest_slice_price}
+                    </p>
+                  ) : null}
+
+                  {typeof place.whole_pie_price === 'number' ? (
+                    <p style={{ margin: 0, fontSize: '13px', color: '#374151' }}>
+                      <strong>Whole pie:</strong> ${place.whole_pie_price}
+                    </p>
+                  ) : null}
+
+                  {typeof place.value_score === 'number' ? (
+                    <p style={{ margin: 0, fontSize: '13px', color: '#374151' }}>
+                      <strong>Value score:</strong> {place.value_score}/10
+                    </p>
+                  ) : null}
                 </div>
 
                 {typeof place.distance_km === 'number' ? (

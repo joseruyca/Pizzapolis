@@ -4,6 +4,7 @@ import { AppHeader } from '@/components/layout/app-header'
 import { createPublicClient } from '@/lib/supabase/public'
 import { createClient as createServerSupabase } from '@/lib/supabase/server'
 import { PlaceDetailTabs } from '@/components/places/place-detail-tabs'
+import { getRelativeTimeLabel } from '@/lib/time'
 
 export default async function PlaceDetailPage({
   params,
@@ -128,8 +129,22 @@ export default async function PlaceDetailPage({
                 ) : null}
               </div>
 
-              <div className='inline-flex rounded-lg border border-red-900/60 bg-[rgba(120,10,10,0.15)] px-3 py-1 text-xs font-medium text-zinc-200'>
-                {place.pizza_style || 'Classic NY Slice'}
+              <div className='flex flex-wrap gap-2'>
+                <div className='inline-flex rounded-lg border border-red-900/60 bg-[rgba(120,10,10,0.15)] px-3 py-1 text-xs font-medium text-zinc-200'>
+                  {place.pizza_style || 'Classic NY Slice'}
+                </div>
+
+                {place.is_best_under_5 ? (
+                  <div className='inline-flex rounded-full border border-red-900/60 bg-[rgba(120,10,10,0.15)] px-3 py-1 text-xs font-semibold text-red-300'>
+                    Best under $5
+                  </div>
+                ) : null}
+
+                {place.is_best_under_10 ? (
+                  <div className='inline-flex rounded-full border border-red-900/60 bg-[rgba(120,10,10,0.15)] px-3 py-1 text-xs font-semibold text-red-300'>
+                    Best under $10
+                  </div>
+                ) : null}
               </div>
 
               <h1 className='mt-5 text-5xl font-bold tracking-tight text-white'>
@@ -157,6 +172,50 @@ export default async function PlaceDetailPage({
                     ? `$${place.cheapest_slice_price}`
                     : place.price_range || '$'}
                 </p>
+              </div>
+
+              <div className='mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
+                <div className='rounded-2xl border border-zinc-800 bg-zinc-950 p-5'>
+                  <p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>
+                    Cheapest slice
+                  </p>
+                  <p className='mt-3 text-2xl font-bold text-white'>
+                    {typeof place.cheapest_slice_price === 'number'
+                      ? `$${place.cheapest_slice_price}`
+                      : '—'}
+                  </p>
+                </div>
+
+                <div className='rounded-2xl border border-zinc-800 bg-zinc-950 p-5'>
+                  <p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>
+                    Whole pie
+                  </p>
+                  <p className='mt-3 text-2xl font-bold text-white'>
+                    {typeof place.whole_pie_price === 'number'
+                      ? `$${place.whole_pie_price}`
+                      : '—'}
+                  </p>
+                </div>
+
+                <div className='rounded-2xl border border-zinc-800 bg-zinc-950 p-5'>
+                  <p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>
+                    Value score
+                  </p>
+                  <p className='mt-3 text-2xl font-bold text-white'>
+                    {typeof place.value_score === 'number'
+                      ? `${place.value_score}/10`
+                      : '—'}
+                  </p>
+                </div>
+
+                <div className='rounded-2xl border border-zinc-800 bg-zinc-950 p-5'>
+                  <p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>
+                    Price updated
+                  </p>
+                  <p className='mt-3 text-base font-medium text-white'>
+                    {getRelativeTimeLabel(place.price_updated_at)}
+                  </p>
+                </div>
               </div>
 
               <PlaceDetailTabs

@@ -10,14 +10,14 @@ export default async function AdminPlacesPage() {
 
   const { data: places, error } = await supabase
     .from('places')
-    .select('id, slug, name, borough, neighborhood, pizza_style, best_known_for, cheapest_slice_price, price_range, average_rating, is_deleted, deleted_at')
+    .select('id, slug, name, borough, neighborhood, pizza_style, best_known_for, cheapest_slice_price, whole_pie_price, value_score, is_best_under_5, is_best_under_10, price_range, average_rating, is_deleted, deleted_at')
     .order('average_rating', { ascending: false })
     .limit(60)
 
   return (
     <AdminShell
       title='Places'
-      description='Edit places, soft delete/restore them and keep pricing current.'
+      description='Edit places, pricing intelligence and soft delete/restore them.'
     >
       {error ? (
         <div className='rounded-2xl border border-red-900 bg-red-950 p-4 text-red-200'>
@@ -47,6 +47,20 @@ export default async function AdminPlacesPage() {
                 <input name='pizza_style' defaultValue={place.pizza_style ?? ''} className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
                 <input name='best_known_for' defaultValue={place.best_known_for ?? ''} className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
                 <input name='cheapest_slice_price' type='number' step='0.01' defaultValue={place.cheapest_slice_price ?? ''} className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
+                <input name='whole_pie_price' type='number' step='0.01' defaultValue={place.whole_pie_price ?? ''} className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
+                <input name='value_score' type='number' step='0.1' defaultValue={place.value_score ?? ''} className='rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white' />
+              </div>
+
+              <div className='flex flex-wrap gap-6'>
+                <label className='flex items-center gap-2 text-sm text-zinc-300'>
+                  <input type='checkbox' name='is_best_under_5' defaultChecked={place.is_best_under_5 ?? false} />
+                  Best under $5
+                </label>
+
+                <label className='flex items-center gap-2 text-sm text-zinc-300'>
+                  <input type='checkbox' name='is_best_under_10' defaultChecked={place.is_best_under_10 ?? false} />
+                  Best under $10
+                </label>
               </div>
 
               <div className='flex flex-wrap items-center gap-3 text-sm text-zinc-500'>

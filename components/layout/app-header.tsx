@@ -51,6 +51,9 @@ export async function AppHeader() {
           <Link href='/guides' className='text-sm text-zinc-300 transition hover:text-white'>
             Guides
           </Link>
+          <Link href='/routes' className='text-sm text-zinc-300 transition hover:text-white'>
+            Routes
+          </Link>
           <Link href='/add-place' className='text-sm text-zinc-300 transition hover:text-white'>
             Suggest a Spot
           </Link>

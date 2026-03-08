@@ -7,6 +7,7 @@ const nav = [
   { href: '/admin/analytics', label: 'Analytics' },
   { href: '/admin/places', label: 'Places' },
   { href: '/admin/guides', label: 'Guides' },
+  { href: '/admin/routes', label: 'Routes' },
   { href: '/admin/moderation', label: 'Moderation' },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/reports', label: 'Reports' },
@@ -33,7 +34,7 @@ export async function AdminShell({
 
       <div className='min-h-screen bg-[linear-gradient(180deg,rgba(60,0,0,0.20),rgba(0,0,0,0.96)_24%)]'>
         <div className='mx-auto grid max-w-7xl gap-6 px-4 py-8 lg:grid-cols-[260px_1fr] lg:px-6'>
-          <aside className='rounded-[28px] border border-zinc-800 bg-black/70 p-4 shadow-xl h-fit'>
+          <aside className='h-fit rounded-[28px] border border-zinc-800 bg-black/70 p-4 shadow-xl'>
             <p className='text-xs uppercase tracking-[0.22em] text-red-400'>Admin</p>
             <h2 className='mt-3 text-2xl font-bold'>Control Center</h2>
             <p className='mt-2 text-sm text-zinc-400'>

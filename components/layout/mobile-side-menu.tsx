@@ -96,6 +96,7 @@ export function MobileSideMenu({
             <MenuLink href='/' label='Home' icon='⌂' active />
             <MenuLink href='/explorar' label='Map' icon='⊙' />
             <MenuLink href='/guides' label='Guides' icon='☷' />
+            <MenuLink href='/routes' label='Routes' icon='➜' />
             <MenuLink href='/add-place' label='Suggest a Spot' icon='➤' />
             {isAdmin ? <MenuLink href='/admin' label='Admin Panel' icon='⬒' /> : null}
           </div>
