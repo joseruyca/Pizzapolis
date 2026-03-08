@@ -4,14 +4,15 @@ import { useMemo, useState } from 'react'
 
 type MapFiltersPanelProps = {
   q?: string
-  borough?: string
   price?: string
   style?: string
   minRating?: string
   sort?: string
+  lat?: string
+  lng?: string
+  radius?: string
 }
 
-const boroughOptions = ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island']
 const styleOptions = [
   'Classic NY Slice',
   'Neapolitan',
@@ -23,12 +24,16 @@ const styleOptions = [
   'Artisan',
   'Late Night',
 ]
+
 const ratingOptions = ['4.5', '4.0', '3.5']
+const radiusOptions = ['1', '3', '5']
+
 const sortOptions = [
   { value: 'featured', label: 'Featured' },
   { value: 'top-rated', label: 'Top rated' },
   { value: 'cheapest', label: 'Cheapest' },
   { value: 'newest', label: 'Newest' },
+  { value: 'nearest', label: 'Nearest' },
 ]
 
 function parseMulti(value?: string) {
@@ -68,27 +73,36 @@ function FilterChip({
 
 export function MapFiltersPanel({
   q,
-  borough,
   price,
   style,
   minRating,
   sort,
+  lat,
+  lng,
+  radius,
 }: MapFiltersPanelProps) {
-  const [boroughs, setBoroughs] = useState<string[]>(() => parseMulti(borough))
   const [prices, setPrices] = useState<string[]>(() => parseMulti(price))
   const [styles, setStyles] = useState<string[]>(() => parseMulti(style))
   const [selectedRating, setSelectedRating] = useState(minRating || '')
   const [selectedSort, setSelectedSort] = useState(sort || 'featured')
+  const [selectedRadius, setSelectedRadius] = useState(radius || '3')
+  const [userLat, setUserLat] = useState(lat || '')
+  const [userLng, setUserLng] = useState(lng || '')
+  const [locating, setLocating] = useState(false)
 
-  function applyFilters() {
+  function applyFilters(nextLat = userLat, nextLng = userLng) {
     const params = new URLSearchParams()
 
     if (q) params.set('q', q)
-    if (boroughs.length) params.set('borough', boroughs.join(','))
     if (prices.length) params.set('price', prices.join(','))
     if (styles.length) params.set('style', styles.join(','))
     if (selectedRating) params.set('minRating', selectedRating)
     if (selectedSort) params.set('sort', selectedSort)
+    if (nextLat && nextLng) {
+      params.set('lat', nextLat)
+      params.set('lng', nextLng)
+      params.set('radius', selectedRadius || '3')
+    }
 
     window.location.href = `/explorar?${params.toString()}`
   }
@@ -97,9 +111,38 @@ export function MapFiltersPanel({
     window.location.href = '/explorar'
   }
 
+  function useMyLocation() {
+    if (!navigator.geolocation) {
+      window.alert('Geolocation is not supported in this browser.')
+      return
+    }
+
+    setLocating(true)
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextLat = String(position.coords.latitude)
+        const nextLng = String(position.coords.longitude)
+        setUserLat(nextLat)
+        setUserLng(nextLng)
+        setSelectedSort('nearest')
+        setLocating(false)
+        applyFilters(nextLat, nextLng)
+      },
+      () => {
+        setLocating(false)
+        window.alert('Location permission was denied or unavailable.')
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+      }
+    )
+  }
+
   const activeCount = useMemo(() => {
-    return boroughs.length + prices.length + styles.length + (selectedRating ? 1 : 0)
-  }, [boroughs, prices, styles, selectedRating])
+    return prices.length + styles.length + (selectedRating ? 1 : 0) + (userLat && userLng ? 1 : 0)
+  }, [prices, styles, selectedRating, userLat, userLng])
 
   return (
     <div className='max-h-[70vh] overflow-y-auto rounded-[28px] border border-zinc-700 bg-[rgba(10,10,12,0.97)] p-5 shadow-2xl backdrop-blur'>
@@ -122,20 +165,40 @@ export function MapFiltersPanel({
         </button>
       </div>
 
-      <div>
-        <p className='mb-3 text-xs uppercase tracking-[0.2em] text-zinc-500'>
-          Borough
-        </p>
+      <div className='rounded-3xl border border-zinc-800 bg-zinc-950 p-4'>
+        <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+          <div>
+            <p className='text-sm font-medium text-white'>Near me</p>
+            <p className='mt-1 text-sm text-zinc-500'>
+              {userLat && userLng ? 'Location enabled' : 'Use your current location'}
+            </p>
+          </div>
 
-        <div className='flex flex-wrap gap-2'>
-          {boroughOptions.map((item) => (
-            <FilterChip
-              key={item}
-              label={item}
-              selected={boroughs.includes(item)}
-              onClick={() => setBoroughs((prev) => toggleValue(prev, item))}
-            />
-          ))}
+          <button
+            type='button'
+            onClick={useMyLocation}
+            disabled={locating}
+            className='rounded-2xl border border-zinc-700 px-4 py-2 text-sm text-white transition hover:bg-zinc-900 disabled:opacity-60'
+          >
+            {locating ? 'Locating...' : 'Use my location'}
+          </button>
+        </div>
+
+        <div className='mt-4'>
+          <p className='mb-3 text-xs uppercase tracking-[0.2em] text-zinc-500'>
+            Radius
+          </p>
+
+          <div className='flex flex-wrap gap-2'>
+            {radiusOptions.map((item) => (
+              <FilterChip
+                key={item}
+                label={`${item} km`}
+                selected={selectedRadius === item}
+                onClick={() => setSelectedRadius(item)}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
@@ -220,7 +283,7 @@ export function MapFiltersPanel({
       <div className='mt-6 grid gap-3 sm:grid-cols-2'>
         <button
           type='button'
-          onClick={applyFilters}
+          onClick={() => applyFilters()}
           className='rounded-2xl bg-white px-5 py-3 font-medium text-black transition hover:opacity-90'
         >
           Apply filters

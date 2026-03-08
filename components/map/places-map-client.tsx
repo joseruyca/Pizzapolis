@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import type { DivIcon } from 'leaflet'
+import { getRelativeTimeLabel } from '@/lib/time'
 
 type Place = {
   id: string
@@ -20,6 +21,8 @@ type Place = {
   cheapest_slice_price?: number | null
   pizza_style?: string | null
   best_known_for?: string | null
+  price_updated_at?: string | null
+  distance_km?: number | null
 }
 
 type ReactLeafletModule = typeof import('react-leaflet')
@@ -83,10 +86,19 @@ function makePinHtml(label: string, color: 'green' | 'yellow' | 'red') {
   `
 }
 
-export function PlacesMapClient({ places }: { places: Place[] }) {
+export function PlacesMapClient({
+  places,
+  userLat,
+  userLng,
+}: {
+  places: Place[]
+  userLat?: number
+  userLng?: number
+}) {
   const [mounted, setMounted] = useState(false)
   const [rl, setRl] = useState<ReactLeafletModule | null>(null)
   const [icons, setIcons] = useState<Record<string, DivIcon>>({})
+  const [userIcon, setUserIcon] = useState<DivIcon | null>(null)
 
   useEffect(() => {
     let active = true
@@ -112,8 +124,18 @@ export function PlacesMapClient({ places }: { places: Place[] }) {
         })
       }
 
+      const nextUserIcon = L.divIcon({
+        className: 'custom-user-pin',
+        html: `
+          <div style="width:18px;height:18px;border-radius:9999px;background:#3b82f6;border:3px solid white;box-shadow:0 0 0 8px rgba(59,130,246,0.18);"></div>
+        `,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9],
+      })
+
       setRl(reactLeaflet)
       setIcons(nextIcons)
+      setUserIcon(nextUserIcon)
       setMounted(true)
     }
 
@@ -124,13 +146,15 @@ export function PlacesMapClient({ places }: { places: Place[] }) {
     }
   }, [places])
 
-  const center = useMemo(
-    () =>
-      places.length > 0
-        ? ([places[0].latitude, places[0].longitude] as [number, number])
-        : defaultCenter,
-    [places]
-  )
+  const center = useMemo(() => {
+    if (typeof userLat === 'number' && typeof userLng === 'number') {
+      return [userLat, userLng] as [number, number]
+    }
+
+    return places.length > 0
+      ? ([places[0].latitude, places[0].longitude] as [number, number])
+      : defaultCenter
+  }, [places, userLat, userLng])
 
   if (!mounted || !rl) {
     return (
@@ -146,7 +170,7 @@ export function PlacesMapClient({ places }: { places: Place[] }) {
     <div className='h-full w-full'>
       <MapContainer
         center={center}
-        zoom={12}
+        zoom={typeof userLat === 'number' && typeof userLng === 'number' ? 13 : 12}
         scrollWheelZoom={true}
         zoomControl={false}
         className='h-full min-h-[72vh] w-full'
@@ -157,6 +181,14 @@ export function PlacesMapClient({ places }: { places: Place[] }) {
           attribution='&copy; CARTO'
           url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
         />
+
+        {typeof userLat === 'number' && typeof userLng === 'number' && userIcon ? (
+          <Marker position={[userLat, userLng]} icon={userIcon}>
+            <Popup>
+              <div style={{ fontWeight: 600 }}>Your location</div>
+            </Popup>
+          </Marker>
+        ) : null}
 
         {places.map((place) => (
           <Marker
@@ -223,6 +255,12 @@ export function PlacesMapClient({ places }: { places: Place[] }) {
                   </span>
                 </div>
 
+                {typeof place.distance_km === 'number' ? (
+                  <p style={{ marginTop: '12px', fontSize: '12px', color: '#6b7280' }}>
+                    {place.distance_km.toFixed(1)} km away
+                  </p>
+                ) : null}
+
                 {place.best_known_for ? (
                   <div style={{ marginTop: '14px' }}>
                     <p style={{
@@ -239,6 +277,10 @@ export function PlacesMapClient({ places }: { places: Place[] }) {
                     </p>
                   </div>
                 ) : null}
+
+                <p style={{ marginTop: '14px', fontSize: '12px', color: '#6b7280' }}>
+                  {getRelativeTimeLabel(place.price_updated_at)}
+                </p>
 
                 <div style={{ marginTop: '16px' }}>
                   <Link

@@ -22,7 +22,7 @@ export async function createPlace(formData: FormData) {
   const latitude = Number(formData.get('latitude'))
   const longitude = Number(formData.get('longitude'))
 
-  if (!name || !borough || Number.isNaN(latitude) || Number.isNaN(longitude)) {
+  if (!name || Number.isNaN(latitude) || Number.isNaN(longitude)) {
     redirect('/add-place?error=Please fill in the required fields')
   }
 
@@ -54,6 +54,7 @@ export async function createPlace(formData: FormData) {
     style_tags: styleTags,
     latitude,
     longitude,
+    price_updated_at: cheapestSlicePrice !== null ? new Date().toISOString() : null,
   })
 
   if (error) {

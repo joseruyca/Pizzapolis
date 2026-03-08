@@ -1,5 +1,6 @@
 ﻿import Link from 'next/link'
 import { AppHeader } from '@/components/layout/app-header'
+import { getCurrentUserWithRole } from '@/lib/auth/is-admin'
 
 function AdminCard({
   title,
@@ -25,7 +26,9 @@ function AdminCard({
   )
 }
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const session = await getCurrentUserWithRole()
+
   return (
     <main className='min-h-screen bg-black text-white'>
       <AppHeader />
@@ -37,24 +40,53 @@ export default function AdminPage() {
           </p>
 
           <h1 className='mt-4 text-5xl font-bold tracking-tight'>
-            Content Management
+            Control Center
           </h1>
 
           <p className='mt-5 max-w-2xl text-xl leading-8 text-zinc-300'>
-            Manage guides, featured content and future moderation tools.
+            Role: <span className='font-semibold text-white'>{session.role}</span>
           </p>
 
-          <div className='mt-12 grid gap-6 lg:grid-cols-2'>
+          <div className='mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3'>
+            <AdminCard
+              title='Dashboard'
+              text='Overview, recent activity and platform health.'
+              href='/admin/dashboard'
+            />
+            <AdminCard
+              title='Places'
+              text='Edit pizza spots, prices, featured status and visibility.'
+              href='/admin/places'
+            />
             <AdminCard
               title='Guides'
               text='Create, publish and manage editorial pizza guides.'
               href='/admin/guides'
             />
-
             <AdminCard
-              title='Coming soon'
-              text='Restaurant of the week, moderation, submissions and more.'
-              href='/admin'
+              title='Moderation'
+              text='Review comments, photos and community content.'
+              href='/admin/moderation'
+            />
+            <AdminCard
+              title='Users'
+              text='Manage users, roles and account actions.'
+              href='/admin/users'
+            />
+            <AdminCard
+              title='Reports'
+              text='Handle flagged content and future report queues.'
+              href='/admin/reports'
+            />
+            <AdminCard
+              title='Offers'
+              text='Create pizzeria deals, sponsored content and promotions.'
+              href='/admin/offers'
+            />
+            <AdminCard
+              title='Settings'
+              text='Control global site content and future configuration.'
+              href='/admin/settings'
             />
           </div>
         </div>

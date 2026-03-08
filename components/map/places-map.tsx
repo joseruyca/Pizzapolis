@@ -17,8 +17,18 @@ type Place = {
   cheapest_slice_price?: number | null
   pizza_style?: string | null
   best_known_for?: string | null
+  price_updated_at?: string | null
+  distance_km?: number | null
 }
 
-export function PlacesMap({ places }: { places: Place[] }) {
-  return <PlacesMapClient places={places} />
+export function PlacesMap({
+  places,
+  userLat,
+  userLng,
+}: {
+  places: Place[]
+  userLat?: number
+  userLng?: number
+}) {
+  return <PlacesMapClient places={places} userLat={userLat} userLng={userLng} />
 }

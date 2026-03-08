@@ -2,10 +2,34 @@
 import { AppHeader } from '@/components/layout/app-header'
 import { SearchFiltersFloating } from '@/components/map/search-filters-floating'
 import { ExploreMapShell } from '@/components/map/explore-map-shell'
+import { haversineDistanceKm } from '@/lib/geo'
 
 function parseMulti(value?: string) {
   if (!value) return []
   return value.split(',').map((item) => item.trim()).filter(Boolean)
+}
+
+type PlaceRow = {
+  id: string
+  slug: string
+  name: string
+  borough: string | null
+  neighborhood: string | null
+  address: string | null
+  description: string | null
+  price_range: string | null
+  style_tags: string[] | null
+  average_rating: number | null
+  review_count: number | null
+  latitude: number
+  longitude: number
+  hero_image_url: string | null
+  cheapest_slice_price: number | null
+  pizza_style: string | null
+  best_known_for: string | null
+  price_updated_at: string | null
+  created_at?: string | null
+  distance_km?: number | null
 }
 
 export default async function ExplorePage({
@@ -13,33 +37,30 @@ export default async function ExplorePage({
 }: {
   searchParams: Promise<{
     q?: string
-    borough?: string
     price?: string
     style?: string
     minRating?: string
     sort?: string
+    lat?: string
+    lng?: string
+    radius?: string
     success?: string
   }>
 }) {
   const params = await searchParams
   const supabase = createPublicClient()
 
-  const boroughs = parseMulti(params.borough)
   const prices = parseMulti(params.price)
   const styles = parseMulti(params.style)
 
   let query = supabase
     .from('places')
     .select(
-      'id, slug, name, borough, neighborhood, address, description, price_range, style_tags, average_rating, review_count, latitude, longitude, hero_image_url, cheapest_slice_price, pizza_style, best_known_for'
+      'id, slug, name, borough, neighborhood, address, description, price_range, style_tags, average_rating, review_count, latitude, longitude, hero_image_url, cheapest_slice_price, pizza_style, best_known_for, price_updated_at, created_at'
     )
 
   if (params.q) {
     query = query.or(`name.ilike.%${params.q}%,neighborhood.ilike.%${params.q}%`)
-  }
-
-  if (boroughs.length) {
-    query = query.in('borough', boroughs)
   }
 
   if (prices.length) {
@@ -54,18 +75,45 @@ export default async function ExplorePage({
     query = query.gte('average_rating', Number(params.minRating))
   }
 
-  if (params.sort === 'top-rated') {
-    query = query.order('average_rating', { ascending: false })
-  } else if (params.sort === 'cheapest') {
-    query = query.order('cheapest_slice_price', { ascending: true })
-  } else if (params.sort === 'newest') {
-    query = query.order('created_at', { ascending: false })
-  } else {
-    query = query.order('average_rating', { ascending: false })
+  const { data, error } = await query
+  let safePlaces = (data ?? []) as PlaceRow[]
+
+  const lat = params.lat ? Number(params.lat) : NaN
+  const lng = params.lng ? Number(params.lng) : NaN
+  const radiusKm = params.radius ? Number(params.radius) : 3
+
+  const hasLocation = !Number.isNaN(lat) && !Number.isNaN(lng)
+
+  if (hasLocation) {
+    safePlaces = safePlaces
+      .map((place) => ({
+        ...place,
+        distance_km: haversineDistanceKm(lat, lng, place.latitude, place.longitude),
+      }))
+      .filter((place) => (place.distance_km ?? 999999) <= radiusKm)
   }
 
-  const { data: places, error } = await query
-  const safePlaces = places ?? []
+  if (params.sort === 'top-rated') {
+    safePlaces = [...safePlaces].sort(
+      (a, b) => (b.average_rating ?? 0) - (a.average_rating ?? 0)
+    )
+  } else if (params.sort === 'cheapest') {
+    safePlaces = [...safePlaces].sort(
+      (a, b) => (a.cheapest_slice_price ?? 999999) - (b.cheapest_slice_price ?? 999999)
+    )
+  } else if (params.sort === 'newest') {
+    safePlaces = [...safePlaces].sort((a, b) =>
+      new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
+    )
+  } else if (params.sort === 'nearest' && hasLocation) {
+    safePlaces = [...safePlaces].sort(
+      (a, b) => (a.distance_km ?? 999999) - (b.distance_km ?? 999999)
+    )
+  } else {
+    safePlaces = [...safePlaces].sort(
+      (a, b) => (b.average_rating ?? 0) - (a.average_rating ?? 0)
+    )
+  }
 
   return (
     <main className='min-h-screen bg-zinc-950 text-white'>
@@ -85,21 +133,19 @@ export default async function ExplorePage({
         ) : null}
 
         <div className='mb-4 hidden lg:block'>
-          <SearchFiltersFloating
-            q={params.q}
-            borough={params.borough}
-            price={params.price}
-          />
+          <SearchFiltersFloating q={params.q} price={params.price} />
         </div>
 
         <ExploreMapShell
           places={safePlaces}
           q={params.q}
-          borough={params.borough}
           price={params.price}
           style={params.style}
           minRating={params.minRating}
           sort={params.sort}
+          lat={params.lat}
+          lng={params.lng}
+          radius={params.radius}
         />
       </div>
     </main>

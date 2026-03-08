@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom'
 type MobileSideMenuProps = {
   userEmail?: string
   isSignedIn?: boolean
+  isAdmin?: boolean
 }
 
 function MenuLink({
@@ -41,6 +42,7 @@ function MenuLink({
 export function MobileSideMenu({
   userEmail,
   isSignedIn,
+  isAdmin,
 }: MobileSideMenuProps) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -95,7 +97,7 @@ export function MobileSideMenu({
             <MenuLink href='/explorar' label='Map' icon='⊙' />
             <MenuLink href='/guides' label='Guides' icon='☷' />
             <MenuLink href='/add-place' label='Suggest a Spot' icon='➤' />
-            <MenuLink href='/admin' label='Admin Panel' icon='⬒' />
+            {isAdmin ? <MenuLink href='/admin' label='Admin Panel' icon='⬒' /> : null}
           </div>
 
           <div className='my-6 border-t border-zinc-800' />

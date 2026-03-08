@@ -5,6 +5,7 @@ import { MobileSideMenu } from '@/components/layout/mobile-side-menu'
 export async function AppHeader() {
   let userEmail: string | undefined
   let isSignedIn = false
+  let isAdmin = false
 
   try {
     const supabase = await createClient()
@@ -15,10 +16,19 @@ export async function AppHeader() {
     if (user?.email) {
       userEmail = user.email
       isSignedIn = true
+
+      const { data: adminRow } = await supabase
+        .from('admin_users')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      isAdmin = !!adminRow
     }
   } catch {
     userEmail = undefined
     isSignedIn = false
+    isAdmin = false
   }
 
   return (
@@ -44,9 +54,13 @@ export async function AppHeader() {
           <Link href='/add-place' className='text-sm text-zinc-300 transition hover:text-white'>
             Suggest a Spot
           </Link>
-          <Link href='/admin' className='text-sm text-zinc-300 transition hover:text-white'>
-            Admin Panel
-          </Link>
+
+          {isAdmin ? (
+            <Link href='/admin' className='text-sm text-zinc-300 transition hover:text-white'>
+              Admin Panel
+            </Link>
+          ) : null}
+
           <Link
             href={isSignedIn ? '/account' : '/login'}
             className='rounded-xl border border-zinc-700 px-4 py-2 text-sm text-white transition hover:bg-zinc-900'
@@ -56,7 +70,7 @@ export async function AppHeader() {
         </nav>
 
         <div className='md:hidden'>
-          <MobileSideMenu userEmail={userEmail} isSignedIn={isSignedIn} />
+          <MobileSideMenu userEmail={userEmail} isSignedIn={isSignedIn} isAdmin={isAdmin} />
         </div>
       </div>
     </header>
