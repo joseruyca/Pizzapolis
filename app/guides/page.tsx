@@ -1,26 +1,52 @@
-﻿import { AppHeader } from '@/components/layout/app-header'
+﻿import Link from 'next/link'
+import { AppHeader } from '@/components/layout/app-header'
+import { createPublicClient } from '@/lib/supabase/public'
 
-function GuideCard({
-  title,
-  subtitle,
-  count,
-}: {
+type Guide = {
+  id: string
+  slug: string
   title: string
-  subtitle: string
-  count: string
-}) {
+  subtitle: string | null
+  description: string | null
+  cover_image_url: string | null
+}
+
+function GuideCard({ guide }: { guide: Guide }) {
   return (
-    <div className='rounded-[28px] border border-zinc-800 bg-[linear-gradient(180deg,rgba(80,10,10,0.25),rgba(0,0,0,0.75))] p-8 shadow-xl'>
-      <div className='flex h-56 flex-col justify-end'>
-        <h3 className='text-3xl font-bold text-white'>{title}</h3>
-        <p className='mt-3 text-lg text-zinc-300'>{subtitle}</p>
-        <p className='mt-5 text-sm text-zinc-500'>⊙ {count}</p>
+    <Link
+      href={`/guides/${guide.slug}`}
+      className='block overflow-hidden rounded-[28px] border border-zinc-800 bg-[linear-gradient(180deg,rgba(80,10,10,0.20),rgba(0,0,0,0.82))] p-8 shadow-xl transition hover:border-zinc-700 hover:bg-[linear-gradient(180deg,rgba(100,15,15,0.22),rgba(0,0,0,0.86))]'
+    >
+      <div className='flex min-h-[240px] flex-col justify-end'>
+        <p className='text-sm uppercase tracking-[0.2em] text-red-400'>Guide</p>
+        <h2 className='mt-4 text-3xl font-bold text-white'>{guide.title}</h2>
+        {guide.subtitle ? (
+          <p className='mt-3 text-lg text-zinc-300'>{guide.subtitle}</p>
+        ) : null}
+        {guide.description ? (
+          <p className='mt-5 line-clamp-3 text-base leading-7 text-zinc-400'>
+            {guide.description}
+          </p>
+        ) : null}
+
+        <div className='mt-8 inline-flex items-center gap-2 text-sm font-medium text-white'>
+          <span>Open guide</span>
+          <span>→</span>
+        </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
-export default function GuidesPage() {
+export default async function GuidesPage() {
+  const supabase = createPublicClient()
+
+  const { data: guides, error } = await supabase
+    .from('guides')
+    .select('id, slug, title, subtitle, description, cover_image_url')
+    .eq('is_published', true)
+    .order('created_at', { ascending: false })
+
   return (
     <main className='min-h-screen bg-black text-white'>
       <AppHeader />
@@ -38,31 +64,20 @@ export default function GuidesPage() {
             </h1>
 
             <p className='mx-auto mt-5 max-w-2xl text-xl leading-9 text-zinc-300'>
-              Handpicked guides to NYC&apos;s finest slices. No fluff, just crust.
+              Handpicked guides to NYC&apos;s finest slices. Clean, fast and actually useful.
             </p>
           </div>
 
+          {error ? (
+            <div className='mt-10 rounded-2xl border border-red-900 bg-red-950 p-4 text-red-200'>
+              Error loading guides: {error.message}
+            </div>
+          ) : null}
+
           <div className='mt-14 grid gap-6 lg:grid-cols-2'>
-            <GuideCard
-              title='Best Cheap Slices'
-              subtitle="NYC's finest under $5"
-              count='5 spots'
-            />
-            <GuideCard
-              title='Best Premium Pizza'
-              subtitle='Worth the splurge'
-              count='6 spots'
-            />
-            <GuideCard
-              title='Late Night Pizza'
-              subtitle='Best slices after dark'
-              count='4 spots'
-            />
-            <GuideCard
-              title='Classic NY Slice'
-              subtitle='Old-school essentials'
-              count='7 spots'
-            />
+            {(guides ?? []).map((guide) => (
+              <GuideCard key={guide.id} guide={guide} />
+            ))}
           </div>
         </div>
       </div>
