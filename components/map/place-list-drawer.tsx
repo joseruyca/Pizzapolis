@@ -5,13 +5,23 @@ type Place = {
   slug: string
   name: string
   borough: string | null
+  neighborhood?: string | null
   address: string | null
   description: string | null
   price_range: string | null
   style_tags: string[] | null
   average_rating: number | null
   review_count: number | null
-  hero_image_url?: string | null
+  cheapest_slice_price?: number | null
+  pizza_style?: string | null
+  best_known_for?: string | null
+  is_best_under_5?: boolean | null
+  is_best_under_10?: boolean | null
+  distance_km?: number | null
+}
+
+function toMiles(km: number) {
+  return km * 0.621371
 }
 
 export function PlaceListDrawer({
@@ -22,7 +32,7 @@ export function PlaceListDrawer({
   resultsCount: number
 }) {
   return (
-    <aside className='h-full rounded-3xl border border-zinc-800 bg-zinc-950/95 p-4 shadow-2xl backdrop-blur'>
+    <aside className='h-full rounded-[32px] border border-[#2a2a2f] bg-[#16171b]/96 p-4 shadow-2xl backdrop-blur'>
       <div className='mb-4 flex items-center justify-between gap-4'>
         <div>
           <p className='text-xs uppercase tracking-[0.2em] text-zinc-500'>Places</p>
@@ -32,7 +42,7 @@ export function PlaceListDrawer({
         </div>
       </div>
 
-      <div className='max-h-[calc(100vh-260px)] overflow-y-auto pr-1'>
+      <div className='max-h-[calc(100vh-240px)] overflow-y-auto pr-1'>
         <PlacesList places={places} />
       </div>
     </aside>

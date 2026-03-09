@@ -33,10 +33,29 @@ type ReactLeafletModule = typeof import('react-leaflet')
 
 const defaultCenter: [number, number] = [40.73061, -73.935242]
 
+function toMiles(km: number) {
+  return km * 0.621371
+}
+
+function formatMiles(distanceKm: number) {
+  return `${toMiles(distanceKm).toFixed(1)} mi away`
+}
+
+function formatRadiusMiles(radiusKm: number) {
+  return `${toMiles(radiusKm).toFixed(1)} mi`
+}
+
+function getRadiusZoom(radiusKm: number) {
+  if (radiusKm <= 1) return 15
+  if (radiusKm <= 3) return 14
+  if (radiusKm <= 5) return 13
+  return 12
+}
+
 function getPinColor(place: Place) {
   if (place.price_range === '$') return 'green'
-  if (place.price_range === '$$$') return 'red'
-  return 'yellow'
+  if (place.price_range === '$$$') return 'wine'
+  return 'gold'
 }
 
 function getPinLabel(place: Place) {
@@ -49,73 +68,129 @@ function getPinLabel(place: Place) {
   return '$$'
 }
 
-function makePinHtml(label: string, color: 'green' | 'yellow' | 'red') {
+function makePinHtml(label: string, color: 'green' | 'gold' | 'wine') {
   const styles = {
-    green: { bg: '#22c55e', glow: '0 0 22px rgba(34,197,94,0.6)' },
-    yellow: { bg: '#fbbf24', glow: '0 0 22px rgba(251,191,36,0.6)' },
-    red: { bg: '#ef4444', glow: '0 0 22px rgba(239,68,68,0.6)' },
+    green: {
+      bg: '#7EA08A',
+      glow: '0 10px 24px rgba(126,160,138,0.22)',
+    },
+    gold: {
+      bg: '#C6A66A',
+      glow: '0 10px 24px rgba(198,166,106,0.22)',
+    },
+    wine: {
+      bg: '#9B5A66',
+      glow: '0 10px 24px rgba(155,90,102,0.22)',
+    },
   }
 
   const s = styles[color]
 
   return `
-    <div style="position: relative; width: 58px; height: 70px; display:flex; align-items:center; justify-content:center;">
+    <div style="position:relative;width:56px;height:68px;display:flex;align-items:center;justify-content:center;">
       <div style="
-        width: 46px;
-        height: 46px;
-        border-radius: 9999px;
-        background: ${s.bg};
-        border: 3px solid white;
-        box-shadow: ${s.glow};
-        color: white;
-        font-weight: 800;
-        font-size: 14px;
+        width:44px;
+        height:44px;
+        border-radius:9999px;
+        background:${s.bg};
+        box-shadow:${s.glow};
+        color:white;
+        font-weight:800;
+        font-size:13px;
         display:flex;
         align-items:center;
         justify-content:center;
         line-height:1;
+        letter-spacing:-0.01em;
       ">${label}</div>
       <div style="
         position:absolute;
         bottom:8px;
         left:50%;
-        width:14px;
-        height:14px;
+        width:13px;
+        height:13px;
         background:${s.bg};
         transform:translateX(-50%) rotate(45deg);
-        border-bottom:3px solid white;
-        border-right:3px solid white;
       "></div>
     </div>
   `
 }
 
-function badgeHtml(label: string) {
+function makeUserHtml() {
   return `
-    <span style="
-      display:inline-flex;
-      align-items:center;
-      border:1px solid rgba(127,29,29,.45);
-      background:rgba(120,10,10,.08);
-      border-radius:9999px;
-      padding:4px 8px;
-      font-size:11px;
-      font-weight:700;
-      color:#991b1b;
-      margin-right:6px;
-      margin-bottom:6px;
-    ">${label}</span>
+    <div style="position:relative;width:26px;height:26px;display:flex;align-items:center;justify-content:center;">
+      <div style="
+        position:absolute;
+        width:18px;
+        height:18px;
+        border-radius:9999px;
+        background:#7C97BB;
+        border:3px solid rgba(255,255,255,0.98);
+        box-shadow:0 0 0 10px rgba(124,151,187,0.26);
+      "></div>
+      <div style="
+        position:absolute;
+        top:0px;
+        width:0;
+        height:0;
+        border-left:5px solid transparent;
+        border-right:5px solid transparent;
+        border-bottom:9px solid #EAF1FA;
+        transform:translateY(-1px);
+        filter:drop-shadow(0 4px 8px rgba(124,151,187,0.25));
+      "></div>
+    </div>
   `
+}
+
+function PopupBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className='inline-flex rounded-full border border-white/8 bg-[#24272E] px-2.5 py-1 text-[11px] font-medium text-zinc-200'>
+      {children}
+    </span>
+  )
+}
+
+function MapEffects({
+  targetCenter,
+  zoom,
+  hasUserLocation,
+  useMapHook,
+}: {
+  targetCenter: [number, number]
+  zoom: number
+  hasUserLocation: boolean
+  useMapHook: () => any
+}) {
+  const map = useMapHook()
+
+  useEffect(() => {
+    map.invalidateSize()
+
+    if (hasUserLocation) {
+      map.flyTo(targetCenter, zoom, {
+        animate: true,
+        duration: 1.05,
+      })
+      return
+    }
+
+    map.setView(targetCenter, zoom, { animate: true })
+  }, [map, targetCenter, zoom, hasUserLocation])
+
+  return null
 }
 
 export function PlacesMapClient({
   places,
   userLat,
   userLng,
+  radiusKm,
 }: {
   places: Place[]
   userLat?: number
   userLng?: number
+  radiusKm: number
 }) {
   const [mounted, setMounted] = useState(false)
   const [rl, setRl] = useState<ReactLeafletModule | null>(null)
@@ -140,19 +215,17 @@ export function PlacesMapClient({
         nextIcons[place.id] = L.divIcon({
           className: 'custom-price-pin',
           html: makePinHtml(label, color),
-          iconSize: [58, 70],
-          iconAnchor: [29, 62],
-          popupAnchor: [0, -52],
+          iconSize: [56, 68],
+          iconAnchor: [28, 58],
+          popupAnchor: [0, -44],
         })
       }
 
       const nextUserIcon = L.divIcon({
         className: 'custom-user-pin',
-        html: `
-          <div style="width:18px;height:18px;border-radius:9999px;background:#3b82f6;border:3px solid white;box-shadow:0 0 0 8px rgba(59,130,246,0.18);"></div>
-        `,
-        iconSize: [18, 18],
-        iconAnchor: [9, 9],
+        html: makeUserHtml(),
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
       })
 
       setRl(reactLeaflet)
@@ -168,31 +241,64 @@ export function PlacesMapClient({
     }
   }, [places])
 
+  const hasUserLocation = typeof userLat === 'number' && typeof userLng === 'number'
+
   const center = useMemo(() => {
-    if (typeof userLat === 'number' && typeof userLng === 'number') {
-      return [userLat, userLng] as [number, number]
+    if (hasUserLocation) {
+      return [userLat as number, userLng as number] as [number, number]
     }
 
     return places.length > 0
       ? ([places[0].latitude, places[0].longitude] as [number, number])
       : defaultCenter
-  }, [places, userLat, userLng])
+  }, [places, userLat, userLng, hasUserLocation])
 
   if (!mounted || !rl) {
     return (
-      <div className='flex h-full min-h-[72vh] w-full items-center justify-center bg-[#080b10] text-zinc-400'>
+      <div className='flex h-full min-h-[72vh] w-full items-center justify-center bg-[#0F1013] text-zinc-400'>
         Loading map...
       </div>
     )
   }
 
-  const { MapContainer, Marker, Popup, TileLayer, ZoomControl } = rl
+  const { MapContainer, Marker, Popup, TileLayer, ZoomControl, useMap, Circle } = rl
+  const zoom = hasUserLocation ? getRadiusZoom(radiusKm) : 12
 
   return (
     <div className='h-full w-full'>
+      <style jsx global>{`
+        .pizza-popup .leaflet-popup-content-wrapper {
+          background: #1a1d23;
+          color: #f4f1ea;
+          border-radius: 24px;
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.48);
+          padding: 0;
+        }
+
+        .pizza-popup .leaflet-popup-content {
+          margin: 0;
+        }
+
+        .pizza-popup .leaflet-popup-tip {
+          background: #1a1d23;
+          border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .pizza-popup .leaflet-popup-close-button {
+          color: #9ca3af;
+          padding: 12px 12px 0 0;
+          font-size: 18px;
+        }
+
+        .pizza-popup .leaflet-popup-close-button:hover {
+          color: #f4f1ea;
+        }
+      `}</style>
+
       <MapContainer
         center={center}
-        zoom={typeof userLat === 'number' && typeof userLng === 'number' ? 13 : 12}
+        zoom={zoom}
         scrollWheelZoom={true}
         zoomControl={false}
         className='h-full min-h-[72vh] w-full'
@@ -204,10 +310,54 @@ export function PlacesMapClient({
           url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
         />
 
-        {typeof userLat === 'number' && typeof userLng === 'number' && userIcon ? (
-          <Marker position={[userLat, userLng]} icon={userIcon}>
-            <Popup>
-              <div style={{ fontWeight: 600 }}>Your location</div>
+        <MapEffects
+          targetCenter={center}
+          zoom={zoom}
+          hasUserLocation={hasUserLocation}
+          useMapHook={useMap}
+        />
+
+        {hasUserLocation ? (
+          <>
+            <Circle
+              center={[userLat as number, userLng as number]}
+              radius={radiusKm * 1000}
+              pathOptions={{
+                color: '#AFC0D8',
+                weight: 2.5,
+                opacity: 0.95,
+                fillColor: '#8EA5C7',
+                fillOpacity: 0.2,
+              }}
+            />
+            <Circle
+              center={[userLat as number, userLng as number]}
+              radius={radiusKm * 1000}
+              pathOptions={{
+                color: '#EAF1FA',
+                weight: 1,
+                opacity: 0.6,
+                fillOpacity: 0,
+                dashArray: '6 8',
+              }}
+            />
+          </>
+        ) : null}
+
+        {hasUserLocation && userIcon ? (
+          <Marker position={[userLat as number, userLng as number]} icon={userIcon}>
+            <Popup className='pizza-popup'>
+              <div className='w-[200px] p-4'>
+                <p className='text-[11px] uppercase tracking-[0.16em] text-zinc-500'>
+                  Your location
+                </p>
+                <p className='mt-2 text-sm font-semibold text-[#F4F1EA]'>
+                  Radius centered on you
+                </p>
+                <p className='mt-2 text-xs text-zinc-400'>
+                  {formatRadiusMiles(radiusKm)}
+                </p>
+              </div>
             </Popup>
           </Marker>
         ) : null}
@@ -218,136 +368,63 @@ export function PlacesMapClient({
             position={[place.latitude, place.longitude]}
             icon={icons[place.id]}
           >
-            <Popup>
-              <div style={{ width: '260px' }}>
-                <div style={{ marginBottom: '10px' }}>
-                  {place.pizza_style ? (
-                    <div style={{
-                      display: 'inline-flex',
-                      border: '1px solid rgba(127,29,29,.45)',
-                      background: 'rgba(120,10,10,.08)',
-                      borderRadius: '10px',
-                      padding: '4px 8px',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      color: '#1f2937',
-                      marginBottom: '8px'
-                    }}>
-                      {place.pizza_style}
-                    </div>
-                  ) : null}
-
-                  <div>
-                    {place.is_best_under_5 ? (
-                      <span dangerouslySetInnerHTML={{ __html: badgeHtml('Best under $5') }} />
-                    ) : null}
-                    {place.is_best_under_10 ? (
-                      <span dangerouslySetInnerHTML={{ __html: badgeHtml('Best under $10') }} />
-                    ) : null}
-                  </div>
+            <Popup className='pizza-popup'>
+              <div className='w-[250px] p-4'>
+                <div className='flex flex-wrap gap-2'>
+                  {place.pizza_style ? <PopupBadge>{place.pizza_style}</PopupBadge> : null}
+                  {place.is_best_under_5 ? <PopupBadge>Under $5</PopupBadge> : null}
+                  {place.is_best_under_10 ? <PopupBadge>Under $10</PopupBadge> : null}
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>{place.name}</h3>
-                    <p style={{ margin: '6px 0 0', fontSize: '13px', color: '#6b7280' }}>
+                <div className='mt-3 flex items-start justify-between gap-3'>
+                  <div className='min-w-0'>
+                    <h3 className='truncate text-[20px] font-bold text-[#F4F1EA]'>
+                      {place.name}
+                    </h3>
+                    <p className='mt-1 text-[13px] text-zinc-400'>
                       {[place.neighborhood, place.borough].filter(Boolean).join(', ')}
                     </p>
                   </div>
 
                   {typeof place.cheapest_slice_price === 'number' ? (
-                    <div style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '9999px',
-                      padding: '6px 10px',
-                      height: 'fit-content',
-                      fontWeight: 700
-                    }}>
+                    <div className='rounded-full border border-white/8 bg-[#262A31] px-3 py-1.5 text-sm font-semibold text-[#F4F1EA]'>
                       ${place.cheapest_slice_price}
                     </div>
                   ) : null}
                 </div>
 
-                <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    borderRadius: '12px',
-                    background: 'rgba(127,29,29,.12)',
-                    padding: '8px 10px',
-                    fontWeight: 700,
-                    color: '#b91c1c'
-                  }}>
+                <div className='mt-4 flex items-center gap-3'>
+                  <div className='inline-flex items-center gap-1.5 rounded-xl bg-[rgba(138,75,85,0.18)] px-3 py-2 text-sm font-semibold text-[#E7D2D6]'>
                     <span>★</span>
                     <span>{place.average_rating ?? 0}</span>
                   </div>
 
-                  <span style={{ fontSize: '13px', color: '#6b7280' }}>
+                  <span className='text-[13px] text-zinc-400'>
                     {place.review_count ?? 0} ratings
                   </span>
                 </div>
 
-                <div style={{ marginTop: '14px', display: 'grid', gap: '8px' }}>
-                  {typeof place.cheapest_slice_price === 'number' ? (
-                    <p style={{ margin: 0, fontSize: '13px', color: '#374151' }}>
-                      <strong>Cheapest slice:</strong> ${place.cheapest_slice_price}
-                    </p>
-                  ) : null}
-
-                  {typeof place.whole_pie_price === 'number' ? (
-                    <p style={{ margin: 0, fontSize: '13px', color: '#374151' }}>
-                      <strong>Whole pie:</strong> ${place.whole_pie_price}
-                    </p>
-                  ) : null}
-
-                  {typeof place.value_score === 'number' ? (
-                    <p style={{ margin: 0, fontSize: '13px', color: '#374151' }}>
-                      <strong>Value score:</strong> {place.value_score}/10
-                    </p>
-                  ) : null}
-                </div>
-
-                {typeof place.distance_km === 'number' ? (
-                  <p style={{ marginTop: '12px', fontSize: '12px', color: '#6b7280' }}>
-                    {place.distance_km.toFixed(1)} km away
-                  </p>
-                ) : null}
-
                 {place.best_known_for ? (
-                  <div style={{ marginTop: '14px' }}>
-                    <p style={{
-                      margin: 0,
-                      fontSize: '11px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '.12em',
-                      color: '#6b7280'
-                    }}>
+                  <div className='mt-4'>
+                    <p className='text-[11px] uppercase tracking-[0.16em] text-zinc-500'>
                       Best known for
                     </p>
-                    <p style={{ margin: '6px 0 0', fontSize: '15px', fontWeight: 700 }}>
+                    <p className='mt-1.5 text-[15px] font-semibold text-[#F4F1EA]'>
                       {place.best_known_for}
                     </p>
                   </div>
                 ) : null}
 
-                <p style={{ marginTop: '14px', fontSize: '12px', color: '#6b7280' }}>
-                  {getRelativeTimeLabel(place.price_updated_at)}
-                </p>
+                <div className='mt-4 flex items-center justify-between gap-3'>
+                  <div className='text-xs text-zinc-400'>
+                    {typeof place.distance_km === 'number'
+                      ? formatMiles(place.distance_km)
+                      : getRelativeTimeLabel(place.price_updated_at)}
+                  </div>
 
-                <div style={{ marginTop: '16px' }}>
                   <Link
                     href={`/places/${place.slug}`}
-                    style={{
-                      display: 'inline-block',
-                      borderRadius: '12px',
-                      background: '#111827',
-                      color: 'white',
-                      padding: '10px 14px',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      textDecoration: 'none'
-                    }}
+                    className='inline-flex rounded-xl bg-[#2B3038] px-4 py-2.5 text-sm font-medium text-[#F4F1EA] transition hover:bg-[#363C46]'
                   >
                     View place
                   </Link>

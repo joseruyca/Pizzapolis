@@ -11,6 +11,8 @@ type MapFiltersPanelProps = {
   lat?: string
   lng?: string
   radius?: string
+  distanceUnit: 'km' | 'mi'
+  onClose?: () => void
 }
 
 const styleOptions = [
@@ -47,6 +49,12 @@ function toggleValue(list: string[], value: string) {
     : [...list, value]
 }
 
+function radiusLabel(value: string, unit: 'km' | 'mi') {
+  const km = Number(value)
+  if (unit === 'mi') return `${(km * 0.621371).toFixed(1)} mi`
+  return `${km} km`
+}
+
 function FilterChip({
   label,
   selected,
@@ -60,14 +68,29 @@ function FilterChip({
     <button
       type='button'
       onClick={onClick}
-      className={`rounded-2xl border px-4 py-2 text-sm transition ${
+      className={`rounded-2xl border px-4 py-2.5 text-sm transition ${
         selected
-          ? 'border-white bg-zinc-800 text-white'
-          : 'border-zinc-600 text-zinc-300 hover:bg-zinc-800'
+          ? 'border-white bg-zinc-800 text-white shadow-[0_8px_24px_rgba(255,255,255,0.06)]'
+          : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500 hover:bg-zinc-900'
       }`}
     >
       {label}
     </button>
+  )
+}
+
+function FilterSection({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <section className='rounded-[24px] border border-zinc-800 bg-zinc-950/90 p-4 sm:p-5'>
+      <p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>{title}</p>
+      <div className='mt-4'>{children}</div>
+    </section>
   )
 }
 
@@ -80,6 +103,8 @@ export function MapFiltersPanel({
   lat,
   lng,
   radius,
+  distanceUnit,
+  onClose,
 }: MapFiltersPanelProps) {
   const [prices, setPrices] = useState<string[]>(() => parseMulti(price))
   const [styles, setStyles] = useState<string[]>(() => parseMulti(style))
@@ -98,6 +123,7 @@ export function MapFiltersPanel({
     if (styles.length) params.set('style', styles.join(','))
     if (selectedRating) params.set('minRating', selectedRating)
     if (selectedSort) params.set('sort', selectedSort)
+
     if (nextLat && nextLng) {
       params.set('lat', nextLat)
       params.set('lng', nextLng)
@@ -141,162 +167,161 @@ export function MapFiltersPanel({
   }
 
   const activeCount = useMemo(() => {
-    return prices.length + styles.length + (selectedRating ? 1 : 0) + (userLat && userLng ? 1 : 0)
+    return (
+      prices.length +
+      styles.length +
+      (selectedRating ? 1 : 0) +
+      (userLat && userLng ? 1 : 0)
+    )
   }, [prices, styles, selectedRating, userLat, userLng])
 
   return (
-    <div className='max-h-[70vh] overflow-y-auto rounded-[28px] border border-zinc-700 bg-[rgba(10,10,12,0.97)] p-5 shadow-2xl backdrop-blur'>
-      <div className='mb-5 flex items-center justify-between gap-4'>
+    <div className='flex h-full max-h-[86vh] flex-col overflow-hidden rounded-t-[28px] border border-zinc-800 bg-[#090909] shadow-[0_-20px_70px_rgba(0,0,0,0.65)] sm:rounded-[30px]'>
+      <div className='flex items-center justify-between gap-4 border-b border-zinc-800 px-5 py-4'>
         <div>
-          <p className='text-xs uppercase tracking-[0.2em] text-zinc-500'>
-            Filters
-          </p>
+          <p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>Filters</p>
           <p className='mt-1 text-sm text-zinc-400'>
             {activeCount} active filter{activeCount === 1 ? '' : 's'}
           </p>
         </div>
 
-        <button
-          type='button'
-          onClick={clearAll}
-          className='rounded-xl border border-zinc-700 px-3 py-2 text-sm text-white transition hover:bg-zinc-800'
-        >
-          Clear all
-        </button>
-      </div>
-
-      <div className='rounded-3xl border border-zinc-800 bg-zinc-950 p-4'>
-        <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-          <div>
-            <p className='text-sm font-medium text-white'>Near me</p>
-            <p className='mt-1 text-sm text-zinc-500'>
-              {userLat && userLng ? 'Location enabled' : 'Use your current location'}
-            </p>
-          </div>
-
+        <div className='flex items-center gap-2'>
           <button
             type='button'
-            onClick={useMyLocation}
-            disabled={locating}
-            className='rounded-2xl border border-zinc-700 px-4 py-2 text-sm text-white transition hover:bg-zinc-900 disabled:opacity-60'
+            onClick={clearAll}
+            className='rounded-xl border border-zinc-700 px-3 py-2 text-sm text-white transition hover:bg-zinc-900'
           >
-            {locating ? 'Locating...' : 'Use my location'}
+            Reset
           </button>
-        </div>
 
-        <div className='mt-4'>
-          <p className='mb-3 text-xs uppercase tracking-[0.2em] text-zinc-500'>
-            Radius
-          </p>
-
-          <div className='flex flex-wrap gap-2'>
-            {radiusOptions.map((item) => (
-              <FilterChip
-                key={item}
-                label={`${item} km`}
-                selected={selectedRadius === item}
-                onClick={() => setSelectedRadius(item)}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className='mt-6'>
-        <p className='mb-3 text-xs uppercase tracking-[0.2em] text-zinc-500'>
-          Price range
-        </p>
-
-        <div className='flex flex-wrap gap-2'>
-          {[
-            { value: '$', label: '$ Budget' },
-            { value: '$$', label: '$$ Mid' },
-            { value: '$$$', label: '$$$ Premium' },
-          ].map((item) => (
-            <FilterChip
-              key={item.value}
-              label={item.label}
-              selected={prices.includes(item.value)}
-              onClick={() => setPrices((prev) => toggleValue(prev, item.value))}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className='mt-6'>
-        <p className='mb-3 text-xs uppercase tracking-[0.2em] text-zinc-500'>
-          Pizza style
-        </p>
-
-        <div className='flex flex-wrap gap-2'>
-          {styleOptions.map((item) => (
-            <FilterChip
-              key={item}
-              label={item}
-              selected={styles.includes(item)}
-              onClick={() => setStyles((prev) => toggleValue(prev, item))}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className='mt-6'>
-        <p className='mb-3 text-xs uppercase tracking-[0.2em] text-zinc-500'>
-          Minimum rating
-        </p>
-
-        <div className='flex flex-wrap gap-2'>
-          {ratingOptions.map((item) => (
-            <FilterChip
-              key={item}
-              label={`${item}+`}
-              selected={selectedRating === item}
-              onClick={() => setSelectedRating(selectedRating === item ? '' : item)}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className='mt-6'>
-        <p className='mb-3 text-xs uppercase tracking-[0.2em] text-zinc-500'>
-          Sort by
-        </p>
-
-        <div className='grid gap-2 sm:grid-cols-2'>
-          {sortOptions.map((item) => (
+          {onClose ? (
             <button
-              key={item.value}
               type='button'
-              onClick={() => setSelectedSort(item.value)}
-              className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${
-                selectedSort === item.value
-                  ? 'border-white bg-zinc-800 text-white'
-                  : 'border-zinc-700 text-zinc-300 hover:bg-zinc-800'
-              }`}
+              onClick={onClose}
+              className='rounded-xl border border-zinc-700 px-3 py-2 text-sm text-white transition hover:bg-zinc-900'
             >
-              {item.label}
+              Close
             </button>
-          ))}
+          ) : null}
         </div>
       </div>
 
-      <div className='mt-6 grid gap-3 sm:grid-cols-2'>
+      <div className='flex-1 overflow-y-auto p-4 sm:p-5'>
+        <div className='space-y-4'>
+          <FilterSection title='Near me'>
+            <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+              <div>
+                <p className='text-sm font-medium text-white'>
+                  {userLat && userLng ? 'Location enabled' : 'Use your current location'}
+                </p>
+                <p className='mt-1 text-sm text-zinc-500'>
+                  Center results around where you are and sort by nearest.
+                </p>
+              </div>
+
+              <button
+                type='button'
+                onClick={useMyLocation}
+                disabled={locating}
+                className='rounded-2xl border border-zinc-700 px-4 py-2.5 text-sm text-white transition hover:bg-zinc-900 disabled:opacity-60'
+              >
+                {locating ? 'Locating...' : 'Use my location'}
+              </button>
+            </div>
+
+            <div className='mt-5'>
+              <p className='mb-3 text-xs uppercase tracking-[0.18em] text-zinc-500'>
+                Radius
+              </p>
+
+              <div className='flex flex-wrap gap-2'>
+                {radiusOptions.map((item) => (
+                  <FilterChip
+                    key={item}
+                    label={radiusLabel(item, distanceUnit)}
+                    selected={selectedRadius === item}
+                    onClick={() => setSelectedRadius(item)}
+                  />
+                ))}
+              </div>
+            </div>
+          </FilterSection>
+
+          <FilterSection title='Price range'>
+            <div className='flex flex-wrap gap-2'>
+              {[
+                { value: '$', label: '$ Budget' },
+                { value: '$$', label: '$$ Mid' },
+                { value: '$$$', label: '$$$ Premium' },
+              ].map((item) => (
+                <FilterChip
+                  key={item.value}
+                  label={item.label}
+                  selected={prices.includes(item.value)}
+                  onClick={() => setPrices((prev) => toggleValue(prev, item.value))}
+                />
+              ))}
+            </div>
+          </FilterSection>
+
+          <FilterSection title='Pizza style'>
+            <div className='flex flex-wrap gap-2'>
+              {styleOptions.map((item) => (
+                <FilterChip
+                  key={item}
+                  label={item}
+                  selected={styles.includes(item)}
+                  onClick={() => setStyles((prev) => toggleValue(prev, item))}
+                />
+              ))}
+            </div>
+          </FilterSection>
+
+          <FilterSection title='Minimum rating'>
+            <div className='flex flex-wrap gap-2'>
+              {ratingOptions.map((item) => (
+                <FilterChip
+                  key={item}
+                  label={`${item}+`}
+                  selected={selectedRating === item}
+                  onClick={() => setSelectedRating(selectedRating === item ? '' : item)}
+                />
+              ))}
+            </div>
+          </FilterSection>
+
+          <FilterSection title='Sort by'>
+            <div className='space-y-3'>
+              {sortOptions.map((item) => (
+                <button
+                  key={item.value}
+                  type='button'
+                  onClick={() => setSelectedSort(item.value)}
+                  className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3.5 text-left text-sm transition ${
+                    selectedSort === item.value
+                      ? 'border-white bg-zinc-800 text-white'
+                      : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500 hover:bg-zinc-900'
+                  }`}
+                >
+                  <span>{item.label}</span>
+                  <span className='text-zinc-500'>{selectedSort === item.value ? '✓' : ''}</span>
+                </button>
+              ))}
+            </div>
+          </FilterSection>
+        </div>
+      </div>
+
+      <div className='border-t border-zinc-800 bg-[#090909] p-4'>
         <button
           type='button'
           onClick={() => applyFilters()}
-          className='rounded-2xl bg-white px-5 py-3 font-medium text-black transition hover:opacity-90'
+          className='w-full rounded-2xl bg-white px-4 py-3.5 text-sm font-medium text-black transition hover:opacity-90'
         >
           Apply filters
-        </button>
-
-        <button
-          type='button'
-          onClick={clearAll}
-          className='rounded-2xl border border-zinc-600 px-5 py-3 text-white transition hover:bg-zinc-800'
-        >
-          Reset
         </button>
       </div>
     </div>
   )
 }
+
