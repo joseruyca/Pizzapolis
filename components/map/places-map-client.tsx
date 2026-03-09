@@ -58,6 +58,48 @@ function getPinColor(place: Place) {
   return 'gold'
 }
 
+function getStyleTone(place: Place) {
+  const style = place.pizza_style?.toLowerCase() || ''
+
+  if (style.includes('sicilian') || style.includes('square')) {
+    return {
+      line: '#6f88b7',
+      chip: '#213042',
+      chipText: '#dce7ff',
+      button: '#d7a54a',
+      buttonText: '#16120b',
+    }
+  }
+
+  if (style.includes('artisan') || style.includes('coal')) {
+    return {
+      line: '#d94b5c',
+      chip: '#311922',
+      chipText: '#ffd9df',
+      button: '#f4ede2',
+      buttonText: '#181510',
+    }
+  }
+
+  if (style.includes('classic') || style.includes('ny')) {
+    return {
+      line: '#d7a54a',
+      chip: '#332714',
+      chipText: '#ffe8be',
+      button: '#f4ede2',
+      buttonText: '#181510',
+    }
+  }
+
+  return {
+    line: '#5b8c8a',
+    chip: '#183130',
+    chipText: '#d5f1ee',
+    button: '#f4ede2',
+    buttonText: '#181510',
+  }
+}
+
 function getPinLabel(place: Place) {
   if (typeof place.cheapest_slice_price === 'number') {
     return `$${Math.round(place.cheapest_slice_price)}`
@@ -71,30 +113,30 @@ function getPinLabel(place: Place) {
 function makePinHtml(label: string, color: 'green' | 'gold' | 'wine') {
   const styles = {
     green: {
-      bg: '#7EA08A',
-      glow: '0 10px 24px rgba(126,160,138,0.22)',
+      bg: '#73B68C',
+      glow: '0 0 0 4px rgba(115,182,140,0.18), 0 12px 26px rgba(115,182,140,0.26)',
     },
     gold: {
-      bg: '#C6A66A',
-      glow: '0 10px 24px rgba(198,166,106,0.22)',
+      bg: '#D7A54A',
+      glow: '0 0 0 4px rgba(215,165,74,0.18), 0 12px 26px rgba(215,165,74,0.24)',
     },
     wine: {
-      bg: '#9B5A66',
-      glow: '0 10px 24px rgba(155,90,102,0.22)',
+      bg: '#D15C70',
+      glow: '0 0 0 4px rgba(209,92,112,0.18), 0 12px 26px rgba(209,92,112,0.26)',
     },
   }
 
   const s = styles[color]
 
   return `
-    <div style="position:relative;width:56px;height:68px;display:flex;align-items:center;justify-content:center;">
+    <div style="position:relative;width:58px;height:70px;display:flex;align-items:center;justify-content:center;">
       <div style="
-        width:44px;
-        height:44px;
+        width:46px;
+        height:46px;
         border-radius:9999px;
         background:${s.bg};
         box-shadow:${s.glow};
-        color:white;
+        color:#fffaf2;
         font-weight:800;
         font-size:13px;
         display:flex;
@@ -107,10 +149,11 @@ function makePinHtml(label: string, color: 'green' | 'gold' | 'wine') {
         position:absolute;
         bottom:8px;
         left:50%;
-        width:13px;
-        height:13px;
+        width:14px;
+        height:14px;
         background:${s.bg};
         transform:translateX(-50%) rotate(45deg);
+        box-shadow:4px 4px 16px rgba(0,0,0,0.18);
       "></div>
     </div>
   `
@@ -124,9 +167,9 @@ function makeUserHtml() {
         width:18px;
         height:18px;
         border-radius:9999px;
-        background:#7C97BB;
+        background:#6F88B7;
         border:3px solid rgba(255,255,255,0.98);
-        box-shadow:0 0 0 10px rgba(124,151,187,0.26);
+        box-shadow:0 0 0 10px rgba(111,136,183,0.22);
       "></div>
       <div style="
         position:absolute;
@@ -135,17 +178,31 @@ function makeUserHtml() {
         height:0;
         border-left:5px solid transparent;
         border-right:5px solid transparent;
-        border-bottom:9px solid #EAF1FA;
+        border-bottom:9px solid #EEF4FF;
         transform:translateY(-1px);
-        filter:drop-shadow(0 4px 8px rgba(124,151,187,0.25));
+        filter:drop-shadow(0 4px 8px rgba(111,136,183,0.25));
       "></div>
     </div>
   `
 }
 
-function PopupBadge({ children }: { children: React.ReactNode }) {
+function PopupBadge({
+  children,
+  bg,
+  color,
+}: {
+  children: React.ReactNode
+  bg?: string
+  color?: string
+}) {
   return (
-    <span className='inline-flex rounded-full border border-white/8 bg-[#24272E] px-2.5 py-1 text-[11px] font-medium text-zinc-200'>
+    <span
+      className='inline-flex rounded-full border border-white/8 px-2.5 py-1 text-[11px] font-medium'
+      style={{
+        background: bg || '#24272E',
+        color: color || '#e7e9ee',
+      }}
+    >
       {children}
     </span>
   )
@@ -215,9 +272,9 @@ export function PlacesMapClient({
         nextIcons[place.id] = L.divIcon({
           className: 'custom-price-pin',
           html: makePinHtml(label, color),
-          iconSize: [56, 68],
-          iconAnchor: [28, 58],
-          popupAnchor: [0, -44],
+          iconSize: [58, 70],
+          iconAnchor: [29, 60],
+          popupAnchor: [0, -46],
         })
       }
 
@@ -255,7 +312,7 @@ export function PlacesMapClient({
 
   if (!mounted || !rl) {
     return (
-      <div className='flex h-full min-h-[72vh] w-full items-center justify-center bg-[#0F1013] text-zinc-400'>
+      <div className='flex h-full min-h-[72vh] w-full items-center justify-center bg-[#111216] text-zinc-400'>
         Loading map...
       </div>
     )
@@ -268,7 +325,7 @@ export function PlacesMapClient({
     <div className='h-full w-full'>
       <style jsx global>{`
         .pizza-popup .leaflet-popup-content-wrapper {
-          background: #1a1d23;
+          background: #171922;
           color: #f4f1ea;
           border-radius: 24px;
           border: 1px solid rgba(255, 255, 255, 0.06);
@@ -281,7 +338,7 @@ export function PlacesMapClient({
         }
 
         .pizza-popup .leaflet-popup-tip {
-          background: #1a1d23;
+          background: #171922;
           border: 1px solid rgba(255, 255, 255, 0.06);
         }
 
@@ -323,20 +380,20 @@ export function PlacesMapClient({
               center={[userLat as number, userLng as number]}
               radius={radiusKm * 1000}
               pathOptions={{
-                color: '#AFC0D8',
+                color: '#B8CAE2',
                 weight: 2.5,
                 opacity: 0.95,
-                fillColor: '#8EA5C7',
-                fillOpacity: 0.2,
+                fillColor: '#7E98C6',
+                fillOpacity: 0.16,
               }}
             />
             <Circle
               center={[userLat as number, userLng as number]}
               radius={radiusKm * 1000}
               pathOptions={{
-                color: '#EAF1FA',
+                color: '#EEF4FF',
                 weight: 1,
-                opacity: 0.6,
+                opacity: 0.58,
                 fillOpacity: 0,
                 dashArray: '6 8',
               }}
@@ -347,7 +404,7 @@ export function PlacesMapClient({
         {hasUserLocation && userIcon ? (
           <Marker position={[userLat as number, userLng as number]} icon={userIcon}>
             <Popup className='pizza-popup'>
-              <div className='w-[200px] p-4'>
+              <div className='w-[208px] p-4'>
                 <p className='text-[11px] uppercase tracking-[0.16em] text-zinc-500'>
                   Your location
                 </p>
@@ -362,77 +419,102 @@ export function PlacesMapClient({
           </Marker>
         ) : null}
 
-        {places.map((place) => (
-          <Marker
-            key={place.id}
-            position={[place.latitude, place.longitude]}
-            icon={icons[place.id]}
-          >
-            <Popup className='pizza-popup'>
-              <div className='w-[250px] p-4'>
-                <div className='flex flex-wrap gap-2'>
-                  {place.pizza_style ? <PopupBadge>{place.pizza_style}</PopupBadge> : null}
-                  {place.is_best_under_5 ? <PopupBadge>Under $5</PopupBadge> : null}
-                  {place.is_best_under_10 ? <PopupBadge>Under $10</PopupBadge> : null}
-                </div>
+        {places.map((place) => {
+          const tone = getStyleTone(place)
 
-                <div className='mt-3 flex items-start justify-between gap-3'>
-                  <div className='min-w-0'>
-                    <h3 className='truncate text-[20px] font-bold text-[#F4F1EA]'>
-                      {place.name}
-                    </h3>
-                    <p className='mt-1 text-[13px] text-zinc-400'>
-                      {[place.neighborhood, place.borough].filter(Boolean).join(', ')}
-                    </p>
-                  </div>
-
-                  {typeof place.cheapest_slice_price === 'number' ? (
-                    <div className='rounded-full border border-white/8 bg-[#262A31] px-3 py-1.5 text-sm font-semibold text-[#F4F1EA]'>
-                      ${place.cheapest_slice_price}
+          return (
+            <Marker
+              key={place.id}
+              position={[place.latitude, place.longitude]}
+              icon={icons[place.id]}
+            >
+              <Popup className='pizza-popup'>
+                <div
+                  className='w-[262px] overflow-hidden rounded-[24px]'
+                  style={{
+                    background: `linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))`,
+                    borderTop: `3px solid ${tone.line}`,
+                  }}
+                >
+                  <div className='p-4'>
+                    <div className='flex flex-wrap gap-2'>
+                      {place.pizza_style ? (
+                        <PopupBadge bg={tone.chip} color={tone.chipText}>
+                          {place.pizza_style}
+                        </PopupBadge>
+                      ) : null}
+                      {place.is_best_under_5 ? (
+                        <PopupBadge bg='#2f2615' color='#ffe2a6'>Under $5</PopupBadge>
+                      ) : null}
+                      {place.is_best_under_10 ? (
+                        <PopupBadge bg='#2e1d23' color='#ffd9df'>Under $10</PopupBadge>
+                      ) : null}
                     </div>
-                  ) : null}
-                </div>
 
-                <div className='mt-4 flex items-center gap-3'>
-                  <div className='inline-flex items-center gap-1.5 rounded-xl bg-[rgba(138,75,85,0.18)] px-3 py-2 text-sm font-semibold text-[#E7D2D6]'>
-                    <span>★</span>
-                    <span>{place.average_rating ?? 0}</span>
+                    <div className='mt-3 flex items-start justify-between gap-3'>
+                      <div className='min-w-0'>
+                        <h3 className='truncate text-[20px] font-bold text-[#F4F1EA]'>
+                          {place.name}
+                        </h3>
+                        <p className='mt-1 text-[13px] text-zinc-400'>
+                          {[place.neighborhood, place.borough].filter(Boolean).join(', ')}
+                        </p>
+                      </div>
+
+                      {typeof place.cheapest_slice_price === 'number' ? (
+                        <div className='rounded-full border border-white/8 bg-[#232734] px-3 py-1.5 text-sm font-semibold text-[#FFF6EA]'>
+                          ${place.cheapest_slice_price}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className='mt-4 flex items-center gap-3'>
+                      <div className='inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-[#fff1ef]' style={{ background: 'rgba(217,75,92,0.18)' }}>
+                        <span>★</span>
+                        <span>{place.average_rating ?? 0}</span>
+                      </div>
+
+                      <span className='text-[13px] text-zinc-400'>
+                        {place.review_count ?? 0} ratings
+                      </span>
+                    </div>
+
+                    {place.best_known_for ? (
+                      <div className='mt-4'>
+                        <p className='text-[11px] uppercase tracking-[0.16em] text-zinc-500'>
+                          Best known for
+                        </p>
+                        <p className='mt-1.5 text-[15px] font-semibold text-[#F4F1EA]'>
+                          {place.best_known_for}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    <div className='mt-5 flex items-center justify-between gap-3'>
+                      <div className='text-xs text-zinc-400'>
+                        {typeof place.distance_km === 'number'
+                          ? formatMiles(place.distance_km)
+                          : getRelativeTimeLabel(place.price_updated_at)}
+                      </div>
+
+                      <Link
+                        href={`/places/${place.slug}`}
+                        className='inline-flex rounded-xl px-4 py-2.5 text-sm font-semibold transition hover:opacity-92'
+                        style={{
+                          background: tone.button,
+                          color: tone.buttonText,
+                          boxShadow: '0 10px 24px rgba(0,0,0,0.18)',
+                        }}
+                      >
+                        View place
+                      </Link>
+                    </div>
                   </div>
-
-                  <span className='text-[13px] text-zinc-400'>
-                    {place.review_count ?? 0} ratings
-                  </span>
                 </div>
-
-                {place.best_known_for ? (
-                  <div className='mt-4'>
-                    <p className='text-[11px] uppercase tracking-[0.16em] text-zinc-500'>
-                      Best known for
-                    </p>
-                    <p className='mt-1.5 text-[15px] font-semibold text-[#F4F1EA]'>
-                      {place.best_known_for}
-                    </p>
-                  </div>
-                ) : null}
-
-                <div className='mt-4 flex items-center justify-between gap-3'>
-                  <div className='text-xs text-zinc-400'>
-                    {typeof place.distance_km === 'number'
-                      ? formatMiles(place.distance_km)
-                      : getRelativeTimeLabel(place.price_updated_at)}
-                  </div>
-
-                  <Link
-                    href={`/places/${place.slug}`}
-                    className='inline-flex rounded-xl bg-[#2B3038] px-4 py-2.5 text-sm font-medium text-[#F4F1EA] transition hover:bg-[#363C46]'
-                  >
-                    View place
-                  </Link>
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+              </Popup>
+            </Marker>
+          )
+        })}
       </MapContainer>
     </div>
   )
