@@ -1,0 +1,55 @@
+﻿.screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  background: #b92837;
+}
+
+.loader {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 8px solid #d1914b;
+  box-sizing: border-box;
+  --c: no-repeat radial-gradient(farthest-side, #d64123 94%, #0000);
+  --b: no-repeat radial-gradient(farthest-side, #000 94%, #0000);
+  background:
+    var(--c) 11px 15px,
+    var(--b) 6px 15px,
+    var(--c) 35px 23px,
+    var(--b) 29px 15px,
+    var(--c) 11px 46px,
+    var(--b) 11px 34px,
+    var(--c) 36px 0px,
+    var(--b) 50px 31px,
+    var(--c) 47px 43px,
+    var(--b) 31px 48px,
+    #f6d353;
+  background-size: 15px 15px, 6px 6px;
+  overflow: visible;
+}
+
+.wedge {
+  position: absolute;
+  left: -10px;
+  top: -10px;
+  width: calc(100% + 20px);
+  height: calc(100% + 20px);
+  border-radius: 50%;
+  background: #b92837;
+  clip-path: polygon(50% 50%, 39% -12%, 114% 20%);
+  transform-origin: 50% 50%;
+  animation: l4 3s steps(6) infinite;
+}
+
+@keyframes l4 {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
