@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const next = requestUrl.searchParams.get('next') ?? '/'
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?e=Missing%20auth%20code`)
+    return NextResponse.redirect(`${origin}/login?error=Missing%20auth%20code`)
   }
 
   const supabase = await createClient()
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 
   if (error) {
     return NextResponse.redirect(
-      `${origin}/login?e=${encodeURIComponent(error.message)}`
+      `${origin}/login?error=${encodeURIComponent(error.message)}`
     )
   }
 

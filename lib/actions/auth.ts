@@ -1,18 +1,21 @@
 ﻿'use server'
 
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 
-function getURL() {
-  let url =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_VERCEL_URL ||
-    'http://localhost:3001'
+async function getRequestOrigin() {
+  const h = await headers()
 
-  url = url.startsWith('http') ? url : `https://${url}`
-  url = url.endsWith('/') ? url : `${url}/`
+  const origin = h.get('origin')
+  if (origin) return origin
 
-  return url
+  const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3001'
+  const proto =
+    h.get('x-forwarded-proto') ||
+    (host.includes('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https')
+
+  return `${proto}://${host}`
 }
 
 export async function signInWithMagicLink(formData: FormData) {
@@ -23,7 +26,8 @@ export async function signInWithMagicLink(formData: FormData) {
   }
 
   const supabase = await createClient()
-  const redirectTo = `${getURL()}auth/callback`
+  const origin = await getRequestOrigin()
+  const redirectTo = `${origin}/auth/callback`
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
