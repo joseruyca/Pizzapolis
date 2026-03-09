@@ -3,6 +3,18 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
+function getURL() {
+  let url =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_VERCEL_URL ||
+    'http://localhost:3001'
+
+  url = url.startsWith('http') ? url : `https://${url}`
+  url = url.endsWith('/') ? url : `${url}/`
+
+  return url
+}
+
 export async function signInWithMagicLink(formData: FormData) {
   const email = String(formData.get('email') || '').trim()
 
@@ -11,9 +23,7 @@ export async function signInWithMagicLink(formData: FormData) {
   }
 
   const supabase = await createClient()
-
-  const redirectTo =
-    (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001') + '/auth/callback'
+  const redirectTo = `${getURL()}auth/callback`
 
   const { error } = await supabase.auth.signInWithOtp({
     email,

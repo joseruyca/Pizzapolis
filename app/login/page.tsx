@@ -6,7 +6,7 @@ import { SignOutButton } from '@/components/auth/sign-out-button'
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string }>
+  searchParams: Promise<{ error?: string; success?: string; e?: string; m?: string }>
 }) {
   const params = await searchParams
   const supabase = await createClient()
@@ -50,7 +50,10 @@ export default async function LoginPage({
             </div>
           </div>
         ) : (
-          <LoginForm error={params.error} success={params.success} />
+          <LoginForm
+            error={params.error || params.e}
+            success={params.success || params.m}
+          />
         )}
       </div>
     </main>
