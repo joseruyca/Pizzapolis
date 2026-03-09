@@ -1,5 +1,4 @@
 ﻿import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 
 export type AdminRole = 'moderator' | 'editor' | 'admin'
@@ -19,51 +18,7 @@ function normalizeRole(role: unknown): AppRole {
   return 'user'
 }
 
-function getDevBypassSession() {
-  const bypassEnabled =
-    process.env.NODE_ENV !== 'production' &&
-    process.env.DEV_ADMIN_BYPASS === 'true'
-
-  if (!bypassEnabled) return null
-
-  return {
-    user: {
-      id: 'dev-admin-bypass',
-      email: 'dev-admin@local.test',
-    } as any,
-    role: 'admin' as AppRole,
-    isStaff: true,
-    isAdmin: true,
-  }
-}
-
-async function getTemporaryAdminSession() {
-  const expected = process.env.ADMIN_TEMP_ACCESS_KEY
-  if (!expected) return null
-
-  const cookieStore = await cookies()
-  const tempAdmin = cookieStore.get('temp_admin_access')?.value
-
-  if (tempAdmin !== 'granted') return null
-
-  return {
-    user: {
-      id: 'temporary-admin-access',
-      email: 'temporary-admin@local.test',
-    } as any,
-    role: 'admin' as AppRole,
-    isStaff: true,
-    isAdmin: true,
-  }
-}
-
 export async function getCurrentUserWithRole() {
-  const devSession = getDevBypassSession()
-  if (devSession) return devSession
-
-  const tempSession = await getTemporaryAdminSession()
-  if (tempSession) return tempSession
-
   const supabase = await createClient()
 
   const {
@@ -96,12 +51,6 @@ export async function getCurrentUserWithRole() {
 }
 
 export async function requireRole(minRole: AppRole) {
-  const devSession = getDevBypassSession()
-  if (devSession) return devSession
-
-  const tempSession = await getTemporaryAdminSession()
-  if (tempSession) return tempSession
-
   const session = await getCurrentUserWithRole()
 
   if (!session.user) {
