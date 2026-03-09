@@ -28,11 +28,11 @@ function InfoCard({
   children: React.ReactNode
 }) {
   return (
-    <div className='rounded-[24px] border border-[#2a3040] bg-[#151821] p-5'>
-      <p className='text-xs uppercase tracking-[0.18em] text-[#7b8497]'>
+    <div className='rounded-[22px] border border-[#2a3040] bg-[#151821] p-4 sm:p-5'>
+      <p className='text-[10px] uppercase tracking-[0.18em] text-[#7b8497]'>
         {label}
       </p>
-      <div className='mt-3'>{children}</div>
+      <div className='mt-2.5'>{children}</div>
     </div>
   )
 }
@@ -65,10 +65,10 @@ export function PlaceDetailTabs({
   const [tab, setTab] = useState<'info' | 'comments' | 'photos'>('info')
 
   return (
-    <div className='mt-8 overflow-hidden rounded-[28px] border border-[#2a3040] bg-[#111216]/95'>
-      <div className='border-b border-[#2a3040] bg-[#171922] px-6 py-6'>
-        <p className='text-xs uppercase tracking-[0.18em] text-[#7b8497]'>
-          Your rating
+    <div className='overflow-hidden rounded-[24px] border border-[#2a3040] bg-[#111216]/95'>
+      <div className='border-b border-[#2a3040] bg-[#171922] px-4 py-4 sm:px-6 sm:py-5'>
+        <p className='text-[10px] uppercase tracking-[0.18em] text-[#7b8497]'>
+          Rate this place
         </p>
 
         <StarRatingForm
@@ -84,7 +84,7 @@ export function PlaceDetailTabs({
           <button
             type='button'
             onClick={() => setTab('info')}
-            className={`px-4 py-4 text-center text-base transition ${
+            className={`px-3 py-3 text-center text-sm sm:text-base transition ${
               tab === 'info'
                 ? 'border-b-2 border-[#d94b5c] font-semibold text-white bg-[#171922]'
                 : 'text-[#7b8497] hover:text-white'
@@ -96,7 +96,7 @@ export function PlaceDetailTabs({
           <button
             type='button'
             onClick={() => setTab('comments')}
-            className={`px-4 py-4 text-center text-base transition ${
+            className={`px-3 py-3 text-center text-sm sm:text-base transition ${
               tab === 'comments'
                 ? 'border-b-2 border-[#d94b5c] font-semibold text-white bg-[#171922]'
                 : 'text-[#7b8497] hover:text-white'
@@ -108,7 +108,7 @@ export function PlaceDetailTabs({
           <button
             type='button'
             onClick={() => setTab('photos')}
-            className={`px-4 py-4 text-center text-base transition ${
+            className={`px-3 py-3 text-center text-sm sm:text-base transition ${
               tab === 'photos'
                 ? 'border-b-2 border-[#d94b5c] font-semibold text-white bg-[#171922]'
                 : 'text-[#7b8497] hover:text-white'
@@ -119,31 +119,31 @@ export function PlaceDetailTabs({
         </div>
       </div>
 
-      <div className='p-6'>
+      <div className='p-4 sm:p-6'>
         {tab === 'info' ? (
-          <div className='space-y-5'>
+          <div className='space-y-4'>
             <InfoCard label='Best known for'>
-              <p className='text-3xl font-bold text-white'>
+              <p className='text-2xl font-bold text-white sm:text-3xl'>
                 {bestKnownFor || 'Signature slice'}
               </p>
             </InfoCard>
 
             <InfoCard label='About'>
-              <p className='text-lg leading-8 text-zinc-300'>
+              <p className='text-base leading-7 text-zinc-300 sm:text-lg sm:leading-8'>
                 {description || 'No description yet.'}
               </p>
             </InfoCard>
 
-            <div className='grid gap-5 md:grid-cols-2'>
+            <div className='grid gap-4 md:grid-cols-2'>
               {hoursText ? (
                 <InfoCard label='Hours'>
-                  <p className='text-lg text-zinc-300'>{hoursText}</p>
+                  <p className='text-base text-zinc-300 sm:text-lg'>{hoursText}</p>
                 </InfoCard>
               ) : null}
 
               {address ? (
                 <InfoCard label='Address'>
-                  <p className='text-lg text-zinc-300'>{address}</p>
+                  <p className='text-base text-zinc-300 sm:text-lg'>{address}</p>
                 </InfoCard>
               ) : null}
             </div>
@@ -153,7 +153,7 @@ export function PlaceDetailTabs({
                 href={googleMapsUrl}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='inline-flex items-center gap-3 rounded-xl bg-[#f4ede2] px-5 py-3 text-base font-semibold text-[#181510] transition hover:opacity-90'
+                className='inline-flex items-center gap-3 rounded-xl bg-[#f4ede2] px-4 py-3 text-sm font-semibold text-[#181510] transition hover:opacity-90 sm:px-5 sm:text-base'
               >
                 <span>↗</span>
                 <span>Open in Google Maps</span>
@@ -164,9 +164,9 @@ export function PlaceDetailTabs({
               {photos.length ? (
                 <PhotoGallery photos={photos} />
               ) : (
-                <div className='flex flex-col items-center justify-center rounded-3xl border border-[#2a3040] bg-[#101319] px-6 py-16 text-center'>
-                  <div className='text-5xl text-[#4a5263]'>⌂</div>
-                  <p className='mt-6 text-lg text-zinc-500'>
+                <div className='flex flex-col items-center justify-center rounded-3xl border border-[#2a3040] bg-[#101319] px-6 py-12 text-center sm:py-16'>
+                  <div className='text-4xl text-[#4a5263] sm:text-5xl'>⌂</div>
+                  <p className='mt-5 text-base text-zinc-500 sm:mt-6 sm:text-lg'>
                     No photos yet. Add the first!
                   </p>
                 </div>
@@ -176,15 +176,15 @@ export function PlaceDetailTabs({
         ) : null}
 
         {tab === 'comments' ? (
-          <div className='space-y-6'>
+          <div className='space-y-5'>
             <CommentForm placeId={placeId} slug={slug} userId={userId} />
 
             {comments.length ? (
               <CommentsList comments={comments} />
             ) : (
-              <div className='flex flex-col items-center justify-center rounded-3xl border border-[#2a3040] bg-[#101319] px-6 py-16 text-center'>
-                <div className='text-5xl text-[#4a5263]'>◔</div>
-                <p className='mt-6 text-lg text-zinc-500'>
+              <div className='flex flex-col items-center justify-center rounded-3xl border border-[#2a3040] bg-[#101319] px-6 py-12 text-center sm:py-16'>
+                <div className='text-4xl text-[#4a5263] sm:text-5xl'>◔</div>
+                <p className='mt-5 text-base text-zinc-500 sm:mt-6 sm:text-lg'>
                   No comments yet. Be the first!
                 </p>
               </div>
@@ -193,22 +193,22 @@ export function PlaceDetailTabs({
         ) : null}
 
         {tab === 'photos' ? (
-          <div className='space-y-6'>
+          <div className='space-y-5'>
             <PhotoUpload placeId={placeId} userId={userId} />
 
             {photos.length ? (
               <PhotoGallery photos={photos} />
             ) : (
-              <div className='flex flex-col items-center justify-center rounded-3xl border border-[#2a3040] bg-[#101319] px-6 py-16 text-center'>
+              <div className='flex flex-col items-center justify-center rounded-3xl border border-[#2a3040] bg-[#101319] px-6 py-12 text-center sm:py-16'>
                 <button
                   type='button'
-                  className='rounded-xl bg-[#f4ede2] px-5 py-3 font-semibold text-[#181510] transition hover:opacity-90'
+                  className='rounded-xl bg-[#f4ede2] px-4 py-3 text-sm font-semibold text-[#181510] transition hover:opacity-90 sm:px-5 sm:text-base'
                 >
                   Add Photo
                 </button>
 
-                <div className='mt-10 text-5xl text-[#4a5263]'>⌂</div>
-                <p className='mt-6 text-lg text-zinc-500'>
+                <div className='mt-8 text-4xl text-[#4a5263] sm:mt-10 sm:text-5xl'>⌂</div>
+                <p className='mt-5 text-base text-zinc-500 sm:mt-6 sm:text-lg'>
                   No photos yet. Add the first!
                 </p>
               </div>

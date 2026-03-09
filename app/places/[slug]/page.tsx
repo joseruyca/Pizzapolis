@@ -6,12 +6,73 @@ import { createClient as createServerSupabase } from '@/lib/supabase/server'
 import { PlaceDetailTabs } from '@/components/places/place-detail-tabs'
 import { savePlace, unsavePlace } from '@/lib/actions/profile'
 
-function InfoBadge({ children }: { children: React.ReactNode }) {
+function InfoBadge({
+  children,
+  tone = 'default',
+}: {
+  children: React.ReactNode
+  tone?: 'default' | 'gold' | 'red' | 'teal'
+}) {
+  const tones = {
+    default: 'border-[#34384a] bg-[#171b24] text-[#dbe3f5]',
+    gold: 'border-[#4a3a20] bg-[#2f2615] text-[#ffe2a6]',
+    red: 'border-[#4f2830] bg-[#311922] text-[#ffd9df]',
+    teal: 'border-[#254746] bg-[#183130] text-[#d5f1ee]',
+  }
+
   return (
-    <div className='inline-flex rounded-full border border-red-900/50 bg-[rgba(111,74,74,0.12)] px-3 py-1 text-xs font-semibold text-red-200'>
+    <div className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold ${tones[tone]}`}>
       {children}
     </div>
   )
+}
+
+function MiniStat({
+  label,
+  value,
+  accent = 'default',
+}: {
+  label: string
+  value: React.ReactNode
+  accent?: 'default' | 'gold' | 'red'
+}) {
+  const accents = {
+    default: 'bg-[#141925] border-[#263047] text-white',
+    gold: 'bg-[#2f2615] border-[#4a3a20] text-[#ffe2a6]',
+    red: 'bg-[#311922] border-[#4f2830] text-[#ffd9df]',
+  }
+
+  return (
+    <div className={`rounded-2xl border px-4 py-3 ${accents[accent]}`}>
+      <p className='text-[10px] uppercase tracking-[0.18em] text-[#7b8497]'>{label}</p>
+      <div className='mt-1.5 text-xl font-bold'>{value}</div>
+    </div>
+  )
+}
+
+function QuickFactCompact({
+  label,
+  value,
+}: {
+  label: string
+  value: React.ReactNode
+}) {
+  return (
+    <div className='rounded-2xl border border-[#2a3040] bg-[#141821] px-4 py-3'>
+      <p className='text-[10px] uppercase tracking-[0.18em] text-[#7b8497]'>{label}</p>
+      <p className='mt-1.5 text-sm font-medium text-[#f4f1ea]'>{value}</p>
+    </div>
+  )
+}
+
+type SimilarPlace = {
+  id: string
+  slug: string
+  name: string
+  borough: string | null
+  neighborhood: string | null
+  pizza_style: string | null
+  cheapest_slice_price: number | null
 }
 
 export default async function PlaceDetailPage({
@@ -110,12 +171,31 @@ export default async function PlaceDetailPage({
     place.address || `${place.name} ${place.neighborhood || ''} ${place.borough || ''}`
   )}`
 
+  const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001'}/places/${slug}`
+
+  const similarFilters = [
+    place.borough ? `borough.eq.${place.borough}` : null,
+    place.pizza_style ? `pizza_style.eq.${place.pizza_style}` : null,
+  ].filter(Boolean)
+
+  let similarPlaces: SimilarPlace[] = []
+  if (similarFilters.length > 0) {
+    const { data: similarPlacesRaw } = await supabase
+      .from('places')
+      .select('id, slug, name, borough, neighborhood, pizza_style, cheapest_slice_price')
+      .neq('id', place.id)
+      .or(similarFilters.join(','))
+      .limit(4)
+
+    similarPlaces = (similarPlacesRaw ?? []) as SimilarPlace[]
+  }
+
   return (
-    <main className='min-h-screen bg-black text-white'>
+    <main className='min-h-screen bg-[#09090b] text-white'>
       <AppHeader />
 
-      <div className='min-h-screen bg-[linear-gradient(180deg,rgba(42,12,12,0.28),rgba(0,0,0,0.96)_28%)]'>
-        <div className='mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8'>
+      <div className='min-h-screen bg-[linear-gradient(180deg,rgba(217,75,92,0.08),rgba(0,0,0,0.96)_30%)]'>
+        <div className='mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8'>
           {queryParams.success ? (
             <div className='mb-4 rounded-2xl border border-emerald-900 bg-emerald-950 p-4 text-emerald-200'>
               {queryParams.success}
@@ -128,21 +208,21 @@ export default async function PlaceDetailPage({
             </div>
           ) : null}
 
-          <div className='rounded-[30px] border border-[#25262b] bg-black/80 shadow-2xl'>
-            <div className='p-6 sm:p-8'>
-              <div className='mb-5 flex items-center justify-between gap-4'>
+          <div className='overflow-hidden rounded-[28px] border border-[#2a3040] bg-[#0f1014]/95 shadow-[0_20px_80px_rgba(0,0,0,0.45)]'>
+            <div className='border-b border-[#2a3040] bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-4 py-4 sm:px-6 sm:py-6 lg:px-8'>
+              <div className='mb-4 flex items-center justify-between gap-3'>
                 <Link
                   href='/explorar'
-                  className='rounded-xl border border-[#34343a] px-4 py-2 text-sm text-white transition hover:bg-[#17181b]'
+                  className='rounded-xl border border-[#34384a] bg-[#151821] px-3 py-2 text-sm text-white transition hover:bg-[#1a1f2b]'
                 >
                   Back
                 </Link>
 
-                <div className='flex items-center gap-3'>
+                <div className='flex items-center gap-2'>
                   {!userId ? (
                     <Link
                       href='/login'
-                      className='rounded-xl border border-[#34343a] px-4 py-2 text-sm text-white transition hover:bg-[#17181b]'
+                      className='rounded-xl border border-[#34384a] bg-[#151821] px-3 py-2 text-sm text-white transition hover:bg-[#1a1f2b]'
                     >
                       Sign in
                     </Link>
@@ -152,7 +232,7 @@ export default async function PlaceDetailPage({
                       <input type='hidden' name='slug' value={slug} />
                       <button
                         type='submit'
-                        className='rounded-xl border border-[#34343a] bg-[#17181b] px-4 py-2 text-sm text-white transition hover:bg-[#202226]'
+                        className='rounded-xl border border-[#34384a] bg-[#151821] px-3 py-2 text-sm font-medium text-white transition hover:bg-[#1a1f2b]'
                       >
                         Saved
                       </button>
@@ -163,52 +243,89 @@ export default async function PlaceDetailPage({
                       <input type='hidden' name='slug' value={slug} />
                       <button
                         type='submit'
-                        className='rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90'
+                        className='rounded-xl bg-[#f4ede2] px-3 py-2 text-sm font-semibold text-[#181510] transition hover:opacity-90'
                       >
                         Save
                       </button>
                     </form>
                   )}
+
+                  <a
+                    href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(place.name)}`}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='rounded-xl border border-[#34384a] bg-[#151821] px-3 py-2 text-sm text-white transition hover:bg-[#1a1f2b]'
+                  >
+                    Share
+                  </a>
                 </div>
               </div>
 
               <div className='flex flex-wrap gap-2'>
-                <InfoBadge>{place.pizza_style || 'Classic NY Slice'}</InfoBadge>
-                {place.is_best_under_5 ? <InfoBadge>Best under $5</InfoBadge> : null}
-                {place.is_best_under_10 ? <InfoBadge>Best under $10</InfoBadge> : null}
-                {place.is_late_night ? <InfoBadge>Late night</InfoBadge> : null}
-                {place.is_worth_the_trip ? <InfoBadge>Worth the trip</InfoBadge> : null}
-                {place.is_first_timer_friendly ? <InfoBadge>First-timer friendly</InfoBadge> : null}
+                <InfoBadge tone='gold'>{place.pizza_style || 'Classic NY Slice'}</InfoBadge>
+                {place.is_best_under_5 ? <InfoBadge tone='gold'>Best under $5</InfoBadge> : null}
+                {place.is_best_under_10 ? <InfoBadge tone='red'>Best under $10</InfoBadge> : null}
+                {place.is_late_night ? <InfoBadge tone='teal'>Late night</InfoBadge> : null}
+                {place.is_worth_the_trip ? <InfoBadge tone='default'>Worth the trip</InfoBadge> : null}
+                {place.is_first_timer_friendly ? <InfoBadge tone='default'>First-timer friendly</InfoBadge> : null}
               </div>
 
-              <h1 className='mt-5 text-5xl font-bold tracking-tight text-white'>
-                {place.name}
-              </h1>
+              <div className='mt-4'>
+                <h1 className='text-4xl font-bold leading-none tracking-tight text-white sm:text-5xl lg:text-6xl'>
+                  {place.name}
+                </h1>
 
-              <p className='mt-3 text-xl text-zinc-300'>
-                ⊙ {[place.neighborhood, place.borough].filter(Boolean).join(', ')}
-              </p>
-
-              <div className='mt-8 flex flex-wrap items-center gap-6 border-b border-[#25262b] pb-8'>
-                <div className='inline-flex items-center gap-3 rounded-2xl bg-[rgba(111,74,74,0.30)] px-4 py-3'>
-                  <span className='text-xl text-red-300'>★</span>
-                  <span className='text-2xl font-bold text-red-200'>
-                    {averageRating}
-                  </span>
-                </div>
-
-                <p className='text-lg text-zinc-400'>
-                  {reviewCount} ratings
+                <p className='mt-3 text-xl text-[#dbe3f5] sm:text-2xl'>
+                  ⊙ {[place.neighborhood, place.borough].filter(Boolean).join(', ')}
                 </p>
 
-                <p className='text-2xl tracking-[0.18em] text-zinc-200'>
-                  {typeof place.cheapest_slice_price === 'number'
-                    ? `$${place.cheapest_slice_price}`
-                    : place.price_range || '$'}
-                </p>
+                {place.best_known_for ? (
+                  <p className='mt-4 max-w-2xl text-base leading-7 text-zinc-300 sm:text-lg sm:leading-8'>
+                    Known for <span className='font-semibold text-white'>{place.best_known_for}</span>.
+                  </p>
+                ) : null}
               </div>
 
-              <div className='mt-8 rounded-[28px] border border-[#25262b] bg-[#121316]'>
+              <div className='mt-5 grid grid-cols-3 gap-3'>
+                <MiniStat label='Rating' value={averageRating} accent='red' />
+                <MiniStat label='Reviews' value={reviewCount} />
+                <MiniStat
+                  label='Slice'
+                  value={
+                    typeof place.cheapest_slice_price === 'number'
+                      ? `$${place.cheapest_slice_price}`
+                      : place.price_range || '$'
+                  }
+                  accent='gold'
+                />
+              </div>
+
+              <div className='mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4'>
+                <QuickFactCompact
+                  label='Style'
+                  value={place.pizza_style || 'Not specified'}
+                />
+                <QuickFactCompact
+                  label='Best slice'
+                  value={place.best_slice || 'Not specified'}
+                />
+                <QuickFactCompact
+                  label='Whole pie'
+                  value={
+                    typeof place.whole_pie_price === 'number'
+                      ? `$${place.whole_pie_price}`
+                      : 'Not specified'
+                  }
+                />
+                <QuickFactCompact
+                  label='Value'
+                  value={typeof place.value_score === 'number' ? `${place.value_score}/10` : 'Not specified'}
+                />
+              </div>
+            </div>
+
+            <div className='grid gap-5 px-4 py-4 sm:px-6 sm:py-6 lg:grid-cols-[minmax(0,1fr)_260px] lg:px-8'>
+              <div className='min-w-0'>
                 <PlaceDetailTabs
                   placeId={place.id}
                   slug={slug}
@@ -223,6 +340,65 @@ export default async function PlaceDetailPage({
                   userRating={userRating}
                 />
               </div>
+
+              <aside className='space-y-4'>
+                <div className='rounded-[24px] border border-[#2a3040] bg-[#151821] p-4'>
+                  <p className='text-xs uppercase tracking-[0.18em] text-[#7b8497]'>Quick actions</p>
+
+                  <div className='mt-3 space-y-2.5'>
+                    <a
+                      href={googleMapsUrl}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='flex w-full items-center justify-center rounded-xl bg-[#f4ede2] px-4 py-3 text-sm font-semibold text-[#181510] transition hover:opacity-90'
+                    >
+                      Open in Google Maps
+                    </a>
+
+                    <Link
+                      href='/routes'
+                      className='flex w-full items-center justify-center rounded-xl border border-[#34384a] bg-[#111216] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#171b24]'
+                    >
+                      Browse routes
+                    </Link>
+                  </div>
+                </div>
+
+                <div className='rounded-[24px] border border-[#2a3040] bg-[#151821] p-4'>
+                  <p className='text-xs uppercase tracking-[0.18em] text-[#7b8497]'>Similar places</p>
+
+                  <div className='mt-3 space-y-2.5'>
+                    {similarPlaces.length ? (
+                      similarPlaces.map((item) => (
+                        <Link
+                          key={item.id}
+                          href={`/places/${item.slug}`}
+                          className='block rounded-2xl border border-[#2a3040] bg-[#101319] p-3 transition hover:bg-[#161b24]'
+                        >
+                          <p className='text-sm font-semibold text-white'>{item.name}</p>
+                          <p className='mt-1 text-xs text-zinc-400'>
+                            {[item.neighborhood, item.borough].filter(Boolean).join(', ')}
+                          </p>
+                          <div className='mt-2 flex flex-wrap gap-2'>
+                            {item.pizza_style ? (
+                              <span className='rounded-full bg-[#1d2d42] px-2.5 py-1 text-[11px] text-[#dce7ff]'>
+                                {item.pizza_style}
+                              </span>
+                            ) : null}
+                            {typeof item.cheapest_slice_price === 'number' ? (
+                              <span className='rounded-full bg-[#302411] px-2.5 py-1 text-[11px] text-[#ffe6b7]'>
+                                ${item.cheapest_slice_price} slice
+                              </span>
+                            ) : null}
+                          </div>
+                        </Link>
+                      ))
+                    ) : (
+                      <p className='text-sm text-zinc-500'>No similar places found yet.</p>
+                    )}
+                  </div>
+                </div>
+              </aside>
             </div>
           </div>
         </div>
