@@ -13,13 +13,37 @@ type AuthUser = {
 export function UsersClient() {
   const [users, setUsers] = useState<AuthUser[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string>('')
+
+  async function safeJson(res: Response) {
+    const text = await res.text()
+    if (!text) return {}
+    try {
+      return JSON.parse(text)
+    } catch {
+      throw new Error(text.slice(0, 300) || 'Invalid server response')
+    }
+  }
 
   async function loadUsers() {
     setLoading(true)
-    const res = await fetch('/api/admin/users')
-    const json = await res.json()
-    setUsers(json.users ?? [])
-    setLoading(false)
+    setError('')
+
+    try {
+      const res = await fetch('/api/admin/users', { cache: 'no-store' })
+      const json = await safeJson(res)
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to load users')
+      }
+
+      setUsers(json.users ?? [])
+    } catch (err) {
+      setUsers([])
+      setError(err instanceof Error ? err.message : 'Failed to load users')
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -31,13 +55,25 @@ export function UsersClient() {
     method: 'PATCH' | 'DELETE',
     body?: Record<string, unknown>
   ) {
-    await fetch(`/api/admin/users/${id}`, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: body ? JSON.stringify(body) : JSON.stringify({}),
-    })
+    setError('')
 
-    await loadUsers()
+    try {
+      const res = await fetch(`/api/admin/users/${id}`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body ?? {}),
+      })
+
+      const json = await safeJson(res)
+
+      if (!res.ok) {
+        throw new Error(json.error || 'User action failed')
+      }
+
+      await loadUsers()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'User action failed')
+    }
   }
 
   if (loading) {
@@ -50,6 +86,18 @@ export function UsersClient() {
 
   return (
     <div className='space-y-4'>
+      {error ? (
+        <div className='rounded-2xl border border-red-900 bg-red-950 p-4 text-red-200'>
+          {error}
+        </div>
+      ) : null}
+
+      {users.length === 0 && !error ? (
+        <div className='rounded-[28px] border border-zinc-800 bg-black/70 p-6 shadow-xl text-zinc-400'>
+          No users found.
+        </div>
+      ) : null}
+
       {users.map((user) => (
         <div
           key={user.id}

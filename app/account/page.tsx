@@ -3,7 +3,7 @@ import { AppHeader } from '@/components/layout/app-header'
 import { createClient } from '@/lib/supabase/server'
 import { createPublicClient } from '@/lib/supabase/public'
 import { SignOutButton } from '@/components/auth/sign-out-button'
-import { UserBadges } from '@/components/account/user-badges'
+import { AccountTabs } from '@/components/account/account-tabs'
 
 type PlaceLite = {
   id: string
@@ -13,7 +13,12 @@ type PlaceLite = {
   style_tags: string[] | null
 }
 
-export default async function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ error?: string; success?: string }>
+}) {
+  const params = (await searchParams) || {}
   const supabase = await createClient()
   const publicSupabase = createPublicClient()
 
@@ -28,8 +33,21 @@ export default async function AccountPage() {
   let lateNightCount = 0
   let cheapSliceCount = 0
   let brooklynCount = 0
+  let savedCount = 0
+  let followersCount = 0
+  let followingCount = 0
+  let profile: any = null
+  let savedPlaces: any[] = []
 
   if (user) {
+    const { data: profileRow } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    profile = profileRow
+
     const { count: reviewsTotal } = await publicSupabase
       .from('reviews')
       .select('*', { count: 'exact', head: true })
@@ -45,9 +63,27 @@ export default async function AccountPage() {
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
 
+    const { count: savedTotal } = await supabase
+      .from('user_saved_places')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+
+    const { count: followersTotal } = await publicSupabase
+      .from('user_follows')
+      .select('*', { count: 'exact', head: true })
+      .eq('following_id', user.id)
+
+    const { count: followingTotal } = await publicSupabase
+      .from('user_follows')
+      .select('*', { count: 'exact', head: true })
+      .eq('follower_id', user.id)
+
     reviewCount = reviewsTotal ?? 0
     commentCount = commentsTotal ?? 0
     photoCount = photosTotal ?? 0
+    savedCount = savedTotal ?? 0
+    followersCount = followersTotal ?? 0
+    followingCount = followingTotal ?? 0
 
     const { data: reviewedPlaces } = await publicSupabase
       .from('reviews')
@@ -87,7 +123,6 @@ export default async function AccountPage() {
       ).size
 
       cheapSliceCount = safePlaces.filter((place) => place.price_range === '$').length
-
       brooklynCount = safePlaces.filter((place) => place.borough === 'Brooklyn').length
 
       lateNightCount = safePlaces.filter((place) => {
@@ -96,15 +131,33 @@ export default async function AccountPage() {
         return style.includes('late night') || tags.includes('late night')
       }).length
     }
+
+    const { data: savedRows } = await supabase
+      .from('user_saved_places')
+      .select(`
+        created_at,
+        place:places (
+          id,
+          slug,
+          name,
+          borough,
+          neighborhood
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(8)
+
+    savedPlaces = savedRows ?? []
   }
 
   return (
     <main className='min-h-screen bg-black text-white'>
       <AppHeader />
 
-      <div className='min-h-screen bg-[linear-gradient(180deg,rgba(60,0,0,0.28),rgba(0,0,0,0.96)_32%)]'>
+      <div className='min-h-screen bg-[linear-gradient(180deg,rgba(60,0,0,0.22),rgba(0,0,0,0.96)_32%)]'>
         <div className='mx-auto max-w-5xl px-6 py-10'>
-          <div className='rounded-[30px] border border-zinc-800 bg-black/80 p-8 shadow-2xl'>
+          <div className='rounded-[30px] border border-zinc-800 bg-black/80 p-6 shadow-2xl sm:p-8'>
             <p className='text-sm uppercase tracking-[0.22em] text-red-400'>
               Account
             </p>
@@ -123,47 +176,30 @@ export default async function AccountPage() {
               </div>
             ) : (
               <div className='mt-8 space-y-6'>
-                <div className='rounded-3xl border border-zinc-800 bg-zinc-950 p-6'>
-                  <p className='text-sm uppercase tracking-[0.18em] text-zinc-500'>
-                    Email
-                  </p>
-                  <p className='mt-3 text-lg text-white'>{user.email}</p>
-                </div>
-
-                <div className='grid gap-4 md:grid-cols-4'>
-                  <div className='rounded-3xl border border-zinc-800 bg-zinc-950 p-6'>
-                    <p className='text-sm uppercase tracking-[0.18em] text-zinc-500'>
-                      Reviews
-                    </p>
-                    <p className='mt-3 text-3xl font-bold text-white'>{reviewCount}</p>
+                {params.error ? (
+                  <div className='rounded-2xl border border-red-900 bg-red-950 px-4 py-3 text-sm text-red-200'>
+                    {params.error}
                   </div>
+                ) : null}
 
-                  <div className='rounded-3xl border border-zinc-800 bg-zinc-950 p-6'>
-                    <p className='text-sm uppercase tracking-[0.18em] text-zinc-500'>
-                      Comments
-                    </p>
-                    <p className='mt-3 text-3xl font-bold text-white'>{commentCount}</p>
+                {params.success ? (
+                  <div className='rounded-2xl border border-emerald-900 bg-emerald-950 px-4 py-3 text-sm text-emerald-200'>
+                    {params.success}
                   </div>
+                ) : null}
 
-                  <div className='rounded-3xl border border-zinc-800 bg-zinc-950 p-6'>
-                    <p className='text-sm uppercase tracking-[0.18em] text-zinc-500'>
-                      Photos
-                    </p>
-                    <p className='mt-3 text-3xl font-bold text-white'>{photoCount}</p>
-                  </div>
-
-                  <div className='rounded-3xl border border-zinc-800 bg-zinc-950 p-6'>
-                    <p className='text-sm uppercase tracking-[0.18em] text-zinc-500'>
-                      Boroughs
-                    </p>
-                    <p className='mt-3 text-3xl font-bold text-white'>{exploredBoroughs}</p>
-                  </div>
-                </div>
-
-                <UserBadges
+                <AccountTabs
+                  profile={profile}
+                  email={user.email || ''}
                   reviewCount={reviewCount}
+                  commentCount={commentCount}
                   photoCount={photoCount}
                   exploredBoroughs={exploredBoroughs}
+                  savedCount={savedCount}
+                  followersCount={followersCount}
+                  followingCount={followingCount}
+                  savedPlaces={savedPlaces}
+                  publicProfileUrl={profile?.username ? `/profile/${profile.username}` : null}
                   lateNightCount={lateNightCount}
                   cheapSliceCount={cheapSliceCount}
                   brooklynCount={brooklynCount}

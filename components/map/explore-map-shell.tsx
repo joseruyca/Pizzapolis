@@ -2,6 +2,15 @@
 
 import Link from 'next/link'
 import { useRef, useState, useEffect } from 'react'
+import {
+  List,
+  LocateFixed,
+  SlidersHorizontal,
+  ChevronRight,
+  Ruler,
+  Check,
+  MapPin,
+} from 'lucide-react'
 import { PlacesMap } from '@/components/map/places-map'
 import { PlaceListDrawer } from '@/components/map/place-list-drawer'
 import { MapFiltersPanel } from '@/components/map/map-filters-panel'
@@ -207,10 +216,10 @@ export function ExploreMapShell({
                   <button
                     type='button'
                     onClick={() => setFiltersOpen(true)}
-                    className='flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-[#8A4B55] text-lg text-white shadow-[0_12px_24px_rgba(138,75,85,0.24)] transition hover:bg-[#A35A66]'
+                    className='flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-[#8A4B55] text-white shadow-[0_12px_24px_rgba(138,75,85,0.24)] transition hover:bg-[#A35A66]'
                     aria-label='Open filters'
                   >
-                    ☷
+                    <SlidersHorizontal className='h-5 w-5' />
                   </button>
                 </div>
               </div>
@@ -225,16 +234,17 @@ export function ExploreMapShell({
                 aria-label='Use my location'
                 title='Use my location'
               >
-                {locating ? '…' : '⌖'}
+                <LocateFixed className='h-4 w-4' />
               </button>
 
               <div className='relative' ref={radiusMenuRef}>
                 <button
                   type='button'
                   onClick={() => setRadiusMenuOpen((v) => !v)}
-                  className='inline-flex items-center rounded-full border border-[#2F343C] bg-[rgba(23,25,30,0.94)] px-4 py-3 text-sm font-semibold text-[#F4F1EA] shadow-xl backdrop-blur transition hover:bg-[#20232A]'
+                  className='inline-flex items-center gap-2 rounded-full border border-[#2F343C] bg-[rgba(23,25,30,0.94)] px-4 py-3 text-sm font-semibold text-[#F4F1EA] shadow-xl backdrop-blur transition hover:bg-[#20232A]'
                 >
-                  {formatRadiusLabel(selectedRadiusKm)}
+                  <Ruler className='h-4 w-4 text-zinc-400' />
+                  <span>{formatRadiusLabel(selectedRadiusKm)}</span>
                 </button>
 
                 {radiusMenuOpen ? (
@@ -256,7 +266,9 @@ export function ExploreMapShell({
                           }`}
                         >
                           <span>{formatRadiusLabel(item)}</span>
-                          <span className='text-zinc-500'>{selectedRadiusKm === item ? '✓' : ''}</span>
+                          {selectedRadiusKm === item ? (
+                            <Check className='h-4 w-4 text-zinc-300' />
+                          ) : null}
                         </button>
                       ))}
                     </div>
@@ -272,7 +284,7 @@ export function ExploreMapShell({
               onClick={() => setListOpen(true)}
               className='inline-flex items-center gap-3 rounded-full border border-[#2F343C] bg-[#17191E] px-5 py-3 text-[#F4F1EA] shadow-xl'
             >
-              <span className='text-zinc-400'>☰</span>
+              <List className='h-4 w-4 text-zinc-400' />
               <span className='text-base font-medium'>{places.length} places</span>
             </button>
 
@@ -280,9 +292,9 @@ export function ExploreMapShell({
               href='/add-place'
               className='inline-flex min-w-[220px] items-center justify-center gap-3 rounded-full bg-[#8A4B55] px-6 py-4 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(138,75,85,0.22)] transition hover:bg-[#A35A66]'
             >
-              <span>📍</span>
+              <MapPin className='h-4 w-4' />
               <span>Suggest a Spot</span>
-              <span>→</span>
+              <ChevronRight className='h-4 w-4' />
             </Link>
           </div>
         </div>

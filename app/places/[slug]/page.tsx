@@ -4,6 +4,7 @@ import { AppHeader } from '@/components/layout/app-header'
 import { createPublicClient } from '@/lib/supabase/public'
 import { createClient as createServerSupabase } from '@/lib/supabase/server'
 import { PlaceDetailTabs } from '@/components/places/place-detail-tabs'
+import { savePlace, unsavePlace } from '@/lib/actions/profile'
 
 function InfoBadge({ children }: { children: React.ReactNode }) {
   return (
@@ -56,6 +57,7 @@ export default async function PlaceDetailPage({
 
   let userId: string | undefined
   let userRating = 0
+  let isSaved = false
 
   try {
     const authSupabase = await createServerSupabase()
@@ -77,10 +79,20 @@ export default async function PlaceDetailPage({
       if (myReview?.overall_rating) {
         userRating = myReview.overall_rating
       }
+
+      const { data: savedRow } = await authSupabase
+        .from('user_saved_places')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .eq('place_id', place.id)
+        .maybeSingle()
+
+      isSaved = !!savedRow
     }
   } catch {
     userId = undefined
     userRating = 0
+    isSaved = false
   }
 
   const reviews = allReviews ?? []
@@ -126,14 +138,38 @@ export default async function PlaceDetailPage({
                   Back
                 </Link>
 
-                {!userId ? (
-                  <Link
-                    href='/login'
-                    className='rounded-xl border border-[#34343a] px-4 py-2 text-sm text-white transition hover:bg-[#17181b]'
-                  >
-                    Sign in
-                  </Link>
-                ) : null}
+                <div className='flex items-center gap-3'>
+                  {!userId ? (
+                    <Link
+                      href='/login'
+                      className='rounded-xl border border-[#34343a] px-4 py-2 text-sm text-white transition hover:bg-[#17181b]'
+                    >
+                      Sign in
+                    </Link>
+                  ) : isSaved ? (
+                    <form action={unsavePlace}>
+                      <input type='hidden' name='place_id' value={place.id} />
+                      <input type='hidden' name='slug' value={slug} />
+                      <button
+                        type='submit'
+                        className='rounded-xl border border-[#34343a] bg-[#17181b] px-4 py-2 text-sm text-white transition hover:bg-[#202226]'
+                      >
+                        Saved
+                      </button>
+                    </form>
+                  ) : (
+                    <form action={savePlace}>
+                      <input type='hidden' name='place_id' value={place.id} />
+                      <input type='hidden' name='slug' value={slug} />
+                      <button
+                        type='submit'
+                        className='rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90'
+                      >
+                        Save
+                      </button>
+                    </form>
+                  )}
+                </div>
               </div>
 
               <div className='flex flex-wrap gap-2'>
