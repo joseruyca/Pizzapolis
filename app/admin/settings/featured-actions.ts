@@ -15,7 +15,7 @@ export async function updateRestaurantOfTheWeek(formData: FormData) {
   const description = String(formData.get('description') || '').trim()
   const isActive = String(formData.get('is_active') || '') === 'true'
 
-  await supabase.from('featured_slots').upsert({
+  const { error } = await supabase.from('featured_slots').upsert({
     key: 'restaurant_of_the_week',
     place_id: placeId || null,
     title: title || null,
@@ -24,6 +24,10 @@ export async function updateRestaurantOfTheWeek(formData: FormData) {
     is_active: isActive,
     updated_at: new Date().toISOString(),
   })
+
+  if (error) {
+    throw new Error(error.message)
+  }
 
   await logAdminAction({
     action: 'featured.restaurant_of_the_week.update',

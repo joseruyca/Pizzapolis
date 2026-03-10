@@ -23,7 +23,7 @@ export async function createRoute(formData: FormData) {
   const slug = `${slugify(title)}-${Math.random().toString(36).slice(2, 6)}`
   const estimatedMinutes = estimatedMinutesRaw ? Number(estimatedMinutesRaw) : null
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('pizza_routes')
     .insert({
       slug,
@@ -38,6 +38,10 @@ export async function createRoute(formData: FormData) {
     })
     .select('id')
     .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
 
   await logAdminAction({
     action: 'route.create',
@@ -57,7 +61,11 @@ export async function toggleRoutePublished(formData: FormData) {
   const id = String(formData.get('id') || '')
   const nextValue = String(formData.get('next_value') || '') === 'true'
 
-  await supabase.from('pizza_routes').update({ is_published: nextValue }).eq('id', id)
+  const { error } = await supabase.from('pizza_routes').update({ is_published: nextValue }).eq('id', id)
+
+  if (error) {
+    throw new Error(error.message)
+  }
 
   await logAdminAction({
     action: nextValue ? 'route.publish' : 'route.unpublish',
@@ -75,7 +83,11 @@ export async function deleteRoute(formData: FormData) {
   const supabase = await createClient()
 
   const id = String(formData.get('id') || '')
-  await supabase.from('pizza_routes').delete().eq('id', id)
+  const { error } = await supabase.from('pizza_routes').delete().eq('id', id)
+
+  if (error) {
+    throw new Error(error.message)
+  }
 
   await logAdminAction({
     action: 'route.delete',

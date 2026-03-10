@@ -18,12 +18,16 @@ export async function addRouteStop(formData: FormData) {
 
   if (!routeId || !placeId) return
 
-  await supabase.from('pizza_route_places').upsert({
+  const { error } = await supabase.from('pizza_route_places').upsert({
     route_id: routeId,
     place_id: placeId,
     sort_order: sortOrder,
     stop_note: stopNote || null,
   })
+
+  if (error) {
+    throw new Error(error.message)
+  }
 
   await logAdminAction({
     action: 'route.stop.add',
@@ -43,7 +47,11 @@ export async function removeRouteStop(formData: FormData) {
   const stopId = String(formData.get('stop_id') || '')
   const routeId = String(formData.get('route_id') || '')
 
-  await supabase.from('pizza_route_places').delete().eq('id', stopId)
+  const { error } = await supabase.from('pizza_route_places').delete().eq('id', stopId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
 
   await logAdminAction({
     action: 'route.stop.remove',

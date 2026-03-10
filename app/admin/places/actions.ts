@@ -45,7 +45,7 @@ export async function updatePlaceBasics(formData: FormData) {
       ? '$$'
       : '$$$'
 
-  await supabase
+  const { error } = await supabase
     .from('places')
     .update({
       name,
@@ -71,6 +71,10 @@ export async function updatePlaceBasics(formData: FormData) {
     })
     .eq('id', id)
 
+  if (error) {
+    throw new Error(error.message)
+  }
+
   await logAdminAction({
     action: 'place.update',
     entityType: 'place',
@@ -86,7 +90,8 @@ export async function updatePlaceBasics(formData: FormData) {
 
   revalidatePath('/admin/places')
   revalidatePath('/explorar')
-  revalidatePath(`/places`)
+  revalidatePath('/places')
+  revalidatePath(`/places/${String(formData.get('slug') || '')}`)
 }
 
 export async function deletePlace(formData: FormData) {
@@ -94,7 +99,11 @@ export async function deletePlace(formData: FormData) {
   const supabase = await createClient()
 
   const id = String(formData.get('id') || '')
-  await supabase.from('places').delete().eq('id', id)
+  const { error } = await supabase.from('places').delete().eq('id', id)
+
+  if (error) {
+    throw new Error(error.message)
+  }
 
   await logAdminAction({
     action: 'place.delete',

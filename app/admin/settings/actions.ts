@@ -13,7 +13,7 @@ export async function updateHomeSettings(formData: FormData) {
   const featuredSubtitle = String(formData.get('featuredSubtitle') || '').trim()
   const featuredDescription = String(formData.get('featuredDescription') || '').trim()
 
-  await supabase.from('site_settings').upsert({
+  const { error } = await supabase.from('site_settings').upsert({
     key: 'home',
     value: {
       featuredTitle,
@@ -22,6 +22,10 @@ export async function updateHomeSettings(formData: FormData) {
     },
     updated_at: new Date().toISOString(),
   })
+
+  if (error) {
+    throw new Error(error.message)
+  }
 
   await logAdminAction({
     action: 'settings.home.update',

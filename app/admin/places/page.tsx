@@ -38,12 +38,12 @@ export default async function AdminPlacesPage() {
       deleted_at
     `)
     .order('average_rating', { ascending: false })
-    .limit(120)
+    .limit(150)
 
   return (
     <AdminShell
       title='Places'
-      description='Search, filter and update place intelligence in a much cleaner editing workflow.'
+      description='Manage place quality, pricing intelligence, editorial flags and publication health from one workflow.'
     >
       {error ? (
         <div className='rounded-2xl border border-red-900 bg-red-950 p-4 text-red-200'>
