@@ -2,7 +2,6 @@
 import {
   Inbox,
   MapPin,
-  Route as RouteIcon,
   Search,
   Shield,
   Users,
@@ -54,12 +53,11 @@ export default async function AdminSearchPage({
 
   let places: any[] = []
   let users: any[] = []
-  let routes: any[] = []
   let reports: any[] = []
   let submissions: any[] = []
 
   if (hasQuery) {
-    const [placesRes, usersRes, routesRes, reportsRes, submissionsRes] = await Promise.all([
+    const [placesRes, usersRes, reportsRes, submissionsRes] = await Promise.all([
       supabase
         .from('places')
         .select('id, name, slug, borough, neighborhood')
@@ -70,12 +68,6 @@ export default async function AdminSearchPage({
         .from('profiles')
         .select('id, username, display_name')
         .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
-        .limit(10),
-
-      supabase
-        .from('pizza_routes')
-        .select('id, title, subtitle, borough, is_published')
-        .or(`title.ilike.%${q}%,subtitle.ilike.%${q}%,borough.ilike.%${q}%`)
         .limit(10),
 
       supabase
@@ -93,7 +85,6 @@ export default async function AdminSearchPage({
 
     places = placesRes.data ?? []
     users = usersRes.data ?? []
-    routes = routesRes.data ?? []
     reports = reportsRes.data ?? []
     submissions = submissionsRes.data ?? []
   }
@@ -110,7 +101,7 @@ export default async function AdminSearchPage({
             <input
               name='q'
               defaultValue={q}
-              placeholder='Search places, users, routes, reports, submissions...'
+              placeholder='Search places, users, reports, submissions...'
               className='w-full rounded-2xl border border-[#2a3040] bg-[#151821] py-3 pl-11 pr-4 text-white outline-none'
             />
           </div>
@@ -159,27 +150,6 @@ export default async function AdminSearchPage({
                       {item.display_name || item.username || 'Unnamed user'}
                     </p>
                     <p className='mt-1 break-all text-sm text-[#a4adbf]'>{item.id}</p>
-                  </Link>
-                ))
-              )}
-            </div>
-          </SectionCard>
-
-          <SectionCard title='Routes' count={routes.length} icon={<RouteIcon className='h-5 w-5' />}>
-            <div className='space-y-3'>
-              {routes.length === 0 ? (
-                <p className='text-sm text-[#7b8497]'>No routes found.</p>
-              ) : (
-                routes.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/admin/routes/${item.id}`}
-                    className='block rounded-2xl border border-[#2a3040] bg-[#151821] p-4 transition hover:bg-[#1a1f2b]'
-                  >
-                    <p className='font-medium text-white'>{item.title}</p>
-                    <p className='mt-1 text-sm text-[#a4adbf]'>
-                      {[item.subtitle, item.borough].filter(Boolean).join(' · ')}
-                    </p>
                   </Link>
                 ))
               )}

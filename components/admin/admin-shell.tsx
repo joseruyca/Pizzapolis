@@ -4,7 +4,6 @@ import {
   BarChart3,
   MapPin,
   BookOpen,
-  Route,
   ShieldCheck,
   Users,
   Flag,
@@ -33,7 +32,6 @@ const navGroups = [
     items: [
       { href: '/admin/places', label: 'Places', icon: MapPin, hint: 'Core location data' },
       { href: '/admin/guides', label: 'Guides', icon: BookOpen, hint: 'Editorial content' },
-      { href: '/admin/routes', label: 'Routes', icon: Route, hint: 'Curated route builder' },
       { href: '/admin/offers', label: 'Offers', icon: TicketPercent, hint: 'Deals and promos' },
       { href: '/admin/banners', label: 'Banners', icon: Megaphone, hint: 'Homepage messages' },
     ],
@@ -122,7 +120,7 @@ export async function AdminShell({
                       <Search className='pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7b8497]' />
                       <input
                         name='q'
-                        placeholder='Search places, users, routes...'
+                        placeholder='Search places, users, reports...'
                         className='w-full rounded-2xl border border-[#2a3040] bg-[#151821] py-3 pl-11 pr-4 text-sm text-white outline-none'
                       />
                     </div>
@@ -173,3 +171,5 @@ export async function AdminShell({
     </main>
   )
 }
+
+

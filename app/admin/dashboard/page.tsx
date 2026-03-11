@@ -9,7 +9,6 @@ import {
   LayoutList,
   MapPin,
   MessageSquare,
-  Route,
   ShieldCheck,
   Star,
   Users,
@@ -201,8 +200,6 @@ export default async function AdminDashboardPage() {
     auditLogsRes,
     openReportsCountRes,
     pendingSubmissionsCountRes,
-    routesCountRes,
-    draftRoutesCountRes,
     featuredSlotRes,
     placesHealthRes,
   ] = await Promise.all([
@@ -232,11 +229,6 @@ export default async function AdminDashboardPage() {
       .from('place_submissions')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'pending'),
-    supabase.from('pizza_routes').select('*', { count: 'exact', head: true }),
-    supabase
-      .from('pizza_routes')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_published', false),
     supabase
       .from('featured_slots')
       .select('key, is_active, place_id')
@@ -293,7 +285,7 @@ export default async function AdminDashboardPage() {
       title='Dashboard'
       description='The main operational overview for content, moderation, community and admin activity.'
     >
-      <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
+      <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
         <StatCard
           label='Total users'
           value={usersCountRes.count ?? 0}
@@ -311,12 +303,6 @@ export default async function AdminDashboardPage() {
           value={publishedGuidesRes.count ?? 0}
           icon={<BookOpen className='h-5 w-5' />}
           hint='Visible editorial content'
-        />
-        <StatCard
-          label='Routes'
-          value={routesCountRes.count ?? 0}
-          icon={<Route className='h-5 w-5' />}
-          hint='Curated route entries'
         />
       </div>
 
@@ -372,17 +358,10 @@ export default async function AdminDashboardPage() {
               description='Place profiles missing key editorial or pricing fields.'
             />
             <PriorityItem
-              label='Draft routes'
-              value={draftRoutesCountRes.count ?? 0}
-              href='/admin/routes'
-              severity='medium'
-              description='Routes created but not yet published.'
-            />
-            <PriorityItem
               label='Featured slot inactive'
               value={featuredInactive ? 1 : 0}
               href='/admin/settings'
-              severity={featuredInactive ? 'low' : 'low'}
+              severity='low'
               description='Restaurant of the week is missing, inactive or not assigned.'
             />
           </div>
@@ -493,18 +472,6 @@ export default async function AdminDashboardPage() {
                   <p className='text-sm font-medium text-white'>Incomplete place profiles</p>
                   <p className='mt-1 text-sm text-[#a4adbf]'>
                     {incompletePlacesCount} place{incompletePlacesCount === 1 ? '' : 's'} need better editorial coverage.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className='rounded-2xl border border-[#2a3040] bg-[#151821] p-4'>
-              <div className='flex items-start gap-3'>
-                <Route className='mt-0.5 h-5 w-5 text-[#d5f1ee]' />
-                <div>
-                  <p className='text-sm font-medium text-white'>Draft route backlog</p>
-                  <p className='mt-1 text-sm text-[#a4adbf]'>
-                    {draftRoutesCountRes.count ?? 0} route{draftRoutesCountRes.count === 1 ? '' : 's'} still waiting to be published.
                   </p>
                 </div>
               </div>
