@@ -51,7 +51,6 @@ export default async function ExplorePage({
     success?: string
   }>
 }) {
-  await new Promise((resolve) => setTimeout(resolve, 2000))
   const params = await searchParams
   const supabase = createPublicClient()
 
@@ -156,4 +155,5 @@ export default async function ExplorePage({
     </main>
   )
 }
+
 

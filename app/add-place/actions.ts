@@ -1,65 +1,76 @@
 ﻿'use server'
 
 import { redirect } from 'next/navigation'
-import { createPublicClient } from '@/lib/supabase/public'
-import { normalizeTag, slugify } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/server'
 
-function getPriceRangeFromCheapestSlice(price?: number | null) {
-  if (typeof price !== 'number' || Number.isNaN(price)) return null
-  if (price < 5) return '$'
-  if (price < 12) return '$$'
-  return '$$$'
+function sanitizeOptionalText(value: FormDataEntryValue | null, maxLength: number) {
+  const text = String(value || '').trim()
+  return text ? text.slice(0, maxLength) : null
+}
+
+function parseOptionalPrice(value: FormDataEntryValue | null) {
+  const raw = String(value || '').trim()
+
+  if (!raw) return null
+
+  const price = Number(raw)
+  return Number.isFinite(price) ? price : Number.NaN
 }
 
 export async function createPlace(formData: FormData) {
+  const honeypot = String(formData.get('website') || '').trim()
+
+  if (honeypot) {
+    redirect('/explorar?success=Thanks! Your spot was sent for review.')
+  }
+
   const name = String(formData.get('name') || '').trim()
-  const neighborhood = String(formData.get('neighborhood') || '').trim()
-  const borough = String(formData.get('borough') || '').trim()
-  const address = String(formData.get('address') || '').trim()
-  const description = String(formData.get('description') || '').trim()
-  const pizzaStyle = String(formData.get('pizza_style') || '').trim()
-  const cheapestSlicePriceRaw = Number(formData.get('cheapest_slice_price'))
+  const address = sanitizeOptionalText(formData.get('address'), 180)
+  const notes = sanitizeOptionalText(formData.get('description'), 600)
+
   const latitude = Number(formData.get('latitude'))
   const longitude = Number(formData.get('longitude'))
 
-  if (!name || Number.isNaN(latitude) || Number.isNaN(longitude)) {
-    redirect('/add-place?error=Please fill in the required fields')
+  const cheapestSlicePrice = parseOptionalPrice(formData.get('cheapest_slice_price'))
+
+  if (!name || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    redirect('/add-place?error=Name and valid map location are required.')
   }
 
-  const baseSlug = slugify(name)
-  const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`
+  if (name.length > 120) {
+    redirect('/add-place?error=Place name is too long.')
+  }
 
-  const cheapestSlicePrice = Number.isNaN(cheapestSlicePriceRaw)
-    ? null
-    : cheapestSlicePriceRaw
+  if (latitude < 40.3 || latitude > 41.1 || longitude < -74.35 || longitude > -73.55) {
+    redirect('/add-place?error=That location does not look like NYC.')
+  }
 
-  const priceRange = getPriceRangeFromCheapestSlice(cheapestSlicePrice)
+  if (
+    Number.isNaN(cheapestSlicePrice) ||
+    (typeof cheapestSlicePrice === 'number' && (cheapestSlicePrice <= 0 || cheapestSlicePrice > 100))
+  ) {
+    redirect('/add-place?error=Slice price must be a valid number.')
+  }
 
-  const styleTags = pizzaStyle ? [normalizeTag(pizzaStyle)] : []
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  const supabase = createPublicClient()
-
-  const { error } = await supabase.from('places').insert({
-    slug,
+  const { error } = await supabase.from('place_submissions').insert({
     name,
-    neighborhood: neighborhood || null,
-    borough: borough || null,
-    address: address || null,
-    description: description || null,
-    hero_image_url: null,
-    price_range: priceRange,
-    pizza_style: pizzaStyle || null,
-    cheapest_slice_price: cheapestSlicePrice,
-    best_known_for: pizzaStyle || null,
-    style_tags: styleTags,
+    address,
     latitude,
     longitude,
-    price_updated_at: cheapestSlicePrice !== null ? new Date().toISOString() : null,
+    cheapest_slice_price: cheapestSlicePrice,
+    notes,
+    status: 'pending',
+    submitted_by: user?.id ?? null,
   })
 
   if (error) {
-    redirect(`/add-place?error=${encodeURIComponent(error.message)}`)
+    redirect('/add-place?error=Could not send your suggestion right now. Please try again.')
   }
 
-  redirect(`/explorar?success=Place added successfully`)
+  redirect('/explorar?success=Thanks! Your spot was sent for review.')
 }

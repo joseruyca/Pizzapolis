@@ -1,6 +1,6 @@
 ﻿import Link from 'next/link'
 import { AppHeader } from '@/components/layout/app-header'
-import { createPlace } from './actions'
+import { SuggestPlaceForm } from '@/components/places/suggest-place-form'
 
 export default async function AddPlacePage({
   searchParams,
@@ -23,12 +23,12 @@ export default async function AddPlacePage({
                   <span>Suggest a Spot</span>
                 </div>
 
-                <h1 className='mt-6 text-5xl font-bold tracking-tight'>
+                <h1 className='mt-6 text-4xl font-bold tracking-tight sm:text-5xl'>
                   Know a great slice?
                 </h1>
 
-                <p className='mt-5 max-w-2xl text-xl leading-8 text-zinc-300'>
-                  Drop the details. If it makes the cut, it goes on the map.
+                <p className='mt-5 max-w-2xl text-lg leading-8 text-zinc-300'>
+                  Search the place and send it for review in seconds.
                 </p>
               </div>
 
@@ -46,130 +46,12 @@ export default async function AddPlacePage({
               </div>
             ) : null}
 
-            <form
-              action={createPlace}
-              className='space-y-6'
-            >
-              <div>
-                <label className='mb-2 block text-base text-zinc-300'>Place Name *</label>
-                <input
-                  type='text'
-                  name='name'
-                  required
-                  className='w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-4 text-white outline-none'
-                  placeholder="e.g. Joe's Pizza"
-                />
-              </div>
-
-              <div className='grid gap-6 md:grid-cols-2'>
-                <div>
-                  <label className='mb-2 block text-base text-zinc-300'>Neighborhood</label>
-                  <input
-                    type='text'
-                    name='neighborhood'
-                    className='w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-4 text-white outline-none'
-                    placeholder='e.g. West Village'
-                  />
-                </div>
-
-                <div>
-                  <label className='mb-2 block text-base text-zinc-300'>Borough *</label>
-                  <select
-                    name='borough'
-                    className='w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-4 text-white outline-none'
-                    defaultValue=''
-                  >
-                    <option value=''>Select</option>
-                    <option value='Manhattan'>Manhattan</option>
-                    <option value='Brooklyn'>Brooklyn</option>
-                    <option value='Queens'>Queens</option>
-                    <option value='Bronx'>Bronx</option>
-                    <option value='Staten Island'>Staten Island</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className='grid gap-6 md:grid-cols-2'>
-                <div>
-                  <label className='mb-2 block text-base text-zinc-300'>Pizza Style</label>
-                  <input
-                    type='text'
-                    name='pizza_style'
-                    className='w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-4 text-white outline-none'
-                    placeholder='Select style'
-                  />
-                </div>
-
-                <div>
-                  <label className='mb-2 block text-base text-zinc-300'>Cheapest slice price</label>
-                  <input
-                    type='number'
-                    step='0.01'
-                    name='cheapest_slice_price'
-                    className='w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-4 text-white outline-none'
-                    placeholder='e.g. 4.50'
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className='mb-2 block text-base text-zinc-300'>Address</label>
-                <input
-                  type='text'
-                  name='address'
-                  className='w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-4 text-white outline-none'
-                  placeholder='Full street address'
-                />
-              </div>
-
-              <div>
-                <label className='mb-2 block text-base text-zinc-300'>Description</label>
-                <textarea
-                  name='description'
-                  rows={5}
-                  className='w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-4 text-white outline-none'
-                  placeholder='Why does this place deserve to be on the map?'
-                />
-              </div>
-
-              <div className='grid gap-6 md:grid-cols-2'>
-                <div>
-                  <label className='mb-2 block text-base text-zinc-300'>Latitude *</label>
-                  <input
-                    type='number'
-                    step='any'
-                    name='latitude'
-                    required
-                    className='w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-4 text-white outline-none'
-                    placeholder='40.730599'
-                  />
-                </div>
-
-                <div>
-                  <label className='mb-2 block text-base text-zinc-300'>Longitude *</label>
-                  <input
-                    type='number'
-                    step='any'
-                    name='longitude'
-                    required
-                    className='w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-4 text-white outline-none'
-                    placeholder='-74.002684'
-                  />
-                </div>
-              </div>
-
-              <div className='flex justify-end'>
-                <button
-                  type='submit'
-                  className='rounded-2xl bg-red-600 px-6 py-4 text-base font-semibold text-white transition hover:bg-red-500'
-                >
-                  Submit spot
-                </button>
-              </div>
-            </form>
+            <SuggestPlaceForm />
           </div>
         </div>
       </div>
     </main>
   )
 }
+
+

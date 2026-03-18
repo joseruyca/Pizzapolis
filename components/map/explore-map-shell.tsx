@@ -43,6 +43,7 @@ type Place = {
 }
 
 const radiusOptionsKm = [1, 3, 5, 8]
+const AUTO_LOCATION_SESSION_KEY = 'pizza-hunt:auto-location-requested'
 
 function toMiles(km: number) {
   return km * 0.621371
@@ -51,6 +52,24 @@ function toMiles(km: number) {
 function formatRadiusLabel(radiusKm: number) {
   const miles = toMiles(radiusKm)
   return `${miles < 10 ? miles.toFixed(1) : Math.round(miles)} mi`
+}
+
+function getLocationErrorMessage(error?: GeolocationPositionError) {
+  if (!error) return 'Showing all NYC spots for now.'
+
+  if (error.code === error.PERMISSION_DENIED) {
+    return 'Location denied. Showing all NYC spots for now.'
+  }
+
+  if (error.code === error.POSITION_UNAVAILABLE) {
+    return 'Could not determine your location. Showing all NYC spots.'
+  }
+
+  if (error.code === error.TIMEOUT) {
+    return 'Location request timed out. Showing all NYC spots.'
+  }
+
+  return 'Showing all NYC spots for now.'
 }
 
 export function ExploreMapShell({
@@ -77,13 +96,23 @@ export function ExploreMapShell({
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [listOpen, setListOpen] = useState(false)
   const [locating, setLocating] = useState(false)
+  const [geoMessage, setGeoMessage] = useState<string | null>(null)
   const [radiusMenuOpen, setRadiusMenuOpen] = useState(false)
   const [selectedRadiusKm, setSelectedRadiusKm] = useState<number>(Number(radius || '3'))
   const radiusMenuRef = useRef<HTMLDivElement | null>(null)
+  const autoRequestStartedRef = useRef(false)
+
+  const hasUserLocation = Boolean(lat && lng)
 
   useEffect(() => {
     setSelectedRadiusKm(Number(radius || '3'))
   }, [radius])
+
+  useEffect(() => {
+    if (hasUserLocation) {
+      setGeoMessage(null)
+    }
+  }, [hasUserLocation])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -129,9 +158,13 @@ export function ExploreMapShell({
     return `/explorar?${params.toString()}`
   }
 
-  function requestLocationAndGo(nextRadiusKm: number, nextSort = 'nearest') {
+  function requestLocationAndGo(
+    nextRadiusKm: number,
+    nextSort = 'nearest',
+    options?: { replace?: boolean; auto?: boolean }
+  ) {
     if (!navigator.geolocation) {
-      window.alert('Geolocation is not supported in this browser.')
+      setGeoMessage('Location is not supported in this browser. Showing all NYC spots.')
       return
     }
 
@@ -139,23 +172,48 @@ export function ExploreMapShell({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        window.location.href = buildExploreUrl({
+        setLocating(false)
+        setGeoMessage(null)
+
+        const nextUrl = buildExploreUrl({
           nextLat: String(position.coords.latitude),
           nextLng: String(position.coords.longitude),
           nextRadiusKm,
           nextSort,
         })
+
+        if (options?.replace) {
+          window.location.replace(nextUrl)
+          return
+        }
+
+        window.location.href = nextUrl
       },
-      () => {
+      (error) => {
         setLocating(false)
-        window.alert('Enable location to use distance around you.')
+        setGeoMessage(getLocationErrorMessage(error))
       },
       {
         enableHighAccuracy: true,
         timeout: 10000,
+        maximumAge: options?.auto ? 60000 : 0,
       }
     )
   }
+
+  useEffect(() => {
+    if (hasUserLocation || autoRequestStartedRef.current) return
+    autoRequestStartedRef.current = true
+
+    if (typeof window === 'undefined') return
+
+    if (window.sessionStorage.getItem(AUTO_LOCATION_SESSION_KEY)) {
+      return
+    }
+
+    window.sessionStorage.setItem(AUTO_LOCATION_SESSION_KEY, '1')
+    requestLocationAndGo(selectedRadiusKm, 'nearest', { replace: true, auto: true })
+  }, [hasUserLocation, selectedRadiusKm])
 
   function useMyLocation() {
     requestLocationAndGo(selectedRadiusKm, 'nearest')
@@ -276,6 +334,12 @@ export function ExploreMapShell({
                 ) : null}
               </div>
             </div>
+
+            {locating || geoMessage ? (
+              <div className='absolute bottom-4 right-4 z-[520] max-w-[280px] rounded-2xl border border-[#2F343C] bg-[rgba(23,25,30,0.94)] px-4 py-3 text-sm text-[#F4F1EA] shadow-xl backdrop-blur'>
+                {locating ? 'Finding your location…' : geoMessage}
+              </div>
+            ) : null}
           </div>
 
           <div className='flex items-center justify-between gap-4'>

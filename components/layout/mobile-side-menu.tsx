@@ -1,8 +1,9 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { SignOutButton } from '@/components/auth/sign-out-button'
 
 type MobileSideMenuProps = {
   userEmail?: string
@@ -118,7 +119,9 @@ export function MobileSideMenu({
                 </div>
 
                 <MenuLink href='/account' label='Account' icon='◔' />
-                <MenuLink href='/login' label='Sign Out' icon='↪' />
+                <div className='px-4 pt-2'>
+                  <SignOutButton fullWidth />
+                </div>
               </>
             ) : (
               <>
