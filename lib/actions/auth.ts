@@ -115,14 +115,16 @@ export async function signInWithGoogle() {
     },
   })
 
-  if (error || !data?.url) {
+  const url = data?.url
+
+  if (error || !url) {
     redirectToLogin({
       error: mapAuthErrorMessage(error?.message, 'signin'),
       mode: 'signin',
     })
   }
 
-  redirect(data.url)
+  redirect(url)
 }
 
 export async function signInWithMagicLink(formData: FormData) {
