@@ -24,7 +24,11 @@ function ModeButton({
     <button
       type='button'
       onClick={onClick}
-      className={ounded-full px-4 py-2 text-sm font-medium transition }
+      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+        active
+          ? 'bg-white text-black'
+          : 'border border-zinc-700 bg-zinc-950 text-zinc-300 hover:bg-zinc-900'
+      }`}
     >
       {children}
     </button>
@@ -81,7 +85,7 @@ export function LoginForm({
       </div>
 
       <div className='mb-5 flex flex-wrap gap-2'>
-        <ModeButton active={mode === 'signin' || mode === 'magic'} onClick={() => setMode('signin')}>
+        <ModeButton active={mode === 'signin'} onClick={() => setMode('signin')}>
           Sign in
         </ModeButton>
         <ModeButton active={mode === 'signup'} onClick={() => setMode('signup')}>
@@ -89,6 +93,9 @@ export function LoginForm({
         </ModeButton>
         <ModeButton active={mode === 'forgot'} onClick={() => setMode('forgot')}>
           Reset password
+        </ModeButton>
+        <ModeButton active={mode === 'magic'} onClick={() => setMode('magic')}>
+          Magic link
         </ModeButton>
       </div>
 
