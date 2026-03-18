@@ -18,7 +18,7 @@ function redirectToLogin({
   error?: string
   success?: string
   mode?: LoginMode
-}) {
+}): never {
   const params = new URLSearchParams()
 
   if (error) params.set('error', error)
@@ -28,7 +28,7 @@ function redirectToLogin({
   redirect(`/login?${params.toString()}`)
 }
 
-function redirectToReset(error: string) {
+function redirectToReset(error: string): never {
   redirect(`/reset-password?error=${encodeURIComponent(error)}`)
 }
 
@@ -115,16 +115,16 @@ export async function signInWithGoogle() {
     },
   })
 
-  const url = data?.url
+  const oauthUrl: string | undefined = data?.url ?? undefined
 
-  if (error || !url) {
+  if (error || !oauthUrl) {
     redirectToLogin({
       error: mapAuthErrorMessage(error?.message, 'signin'),
       mode: 'signin',
     })
   }
 
-  redirect(url)
+  return redirect(oauthUrl)
 }
 
 export async function signInWithMagicLink(formData: FormData) {
@@ -193,7 +193,7 @@ export async function signInWithPassword(formData: FormData) {
     })
   }
 
-  redirect('/account')
+  return redirect('/account')
 }
 
 export async function signUpWithPassword(formData: FormData) {
@@ -248,7 +248,7 @@ export async function signUpWithPassword(formData: FormData) {
   }
 
   if (data.session) {
-    redirect('/account')
+    return redirect('/account')
   }
 
   redirectToLogin({
@@ -323,5 +323,5 @@ export async function updatePassword(formData: FormData) {
 export async function signOut() {
   const supabase = await createClient()
   await supabase.auth.signOut()
-  redirect('/')
+  return redirect('/')
 }
