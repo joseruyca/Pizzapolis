@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import { createPlace } from '@/app/add-place/actions'
@@ -93,20 +93,19 @@ export function SuggestPlaceForm() {
         className='hidden'
       />
 
-      {apiKey ? (
-        <div className='space-y-3'>
-          <label className='block text-base text-zinc-300'>Search first if you want</label>
-          <input
-            ref={inputRef}
-            type='text'
-            placeholder='Search the place name...'
-            className='w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-4 text-white outline-none placeholder:text-zinc-500'
-          />
-          <p className='text-sm text-zinc-500'>
-            Search is optional. You can also just click the exact point on the map.
-          </p>
-        </div>
-      ) : null}
+      <div className='space-y-3'>
+        <label className='block text-base text-zinc-300'>Search by address or place name</label>
+        <input
+          ref={inputRef}
+          type='text'
+          placeholder={apiKey ? 'Search a place or street…' : 'Google Places key not configured'}
+          disabled={!apiKey}
+          className='w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-5 py-4 text-white outline-none placeholder:text-zinc-500 disabled:cursor-not-allowed disabled:opacity-60'
+        />
+        <p className='text-sm text-zinc-500'>
+          You can search first, click directly on the map, or use your current location.
+        </p>
+      </div>
 
       <div className='grid gap-6 lg:grid-cols-[1fr_320px]'>
         <div className='space-y-6'>
@@ -152,7 +151,7 @@ export function SuggestPlaceForm() {
             <p className='text-sm uppercase tracking-[0.18em] text-zinc-500'>Quick submit</p>
             <h2 className='mt-3 text-xl font-semibold text-white'>Keep it simple</h2>
             <p className='mt-3 text-sm leading-7 text-zinc-400'>
-              Name + exact map point is enough. Everything else is optional.
+              Search, drop a pin, add the name, and send it. The exact location matters most.
             </p>
           </div>
 
@@ -178,7 +177,7 @@ export function SuggestPlaceForm() {
           </div>
 
           <div className='rounded-2xl border border-zinc-800 bg-zinc-950 p-4 text-sm text-zinc-400'>
-            Your suggestion should go to review first, not directly live.
+            Suggestions should go to review first, not directly live.
           </div>
 
           <button

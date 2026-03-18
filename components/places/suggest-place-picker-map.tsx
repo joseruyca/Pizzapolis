@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useState } from 'react'
@@ -177,8 +177,8 @@ export function SuggestPlacePickerMap({
     <div className='overflow-hidden rounded-[28px] border border-zinc-800 bg-zinc-950'>
       <div className='flex items-center justify-between gap-4 border-b border-zinc-800 px-4 py-3'>
         <div>
-          <p className='text-sm font-medium text-white'>Pin the exact spot</p>
-          <p className='text-xs text-zinc-500'>Click the map to drop the pin. Drag it to fine-tune.</p>
+          <p className='text-sm font-medium text-white'>Choose the exact spot</p>
+          <p className='text-xs text-zinc-500'>Search above or click directly on the map. You can drag the pin after placing it.</p>
         </div>
 
         <button

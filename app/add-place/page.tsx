@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { AppHeader } from '@/components/layout/app-header'
 import { SuggestPlaceForm } from '@/components/places/suggest-place-form'
 
