@@ -1,25 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-const allowedNextPaths = new Set([
-  '/',
-  '/account',
-  '/explorar',
-  '/reset-password',
-])
-
-function normalizeNext(rawNext: string | null) {
-  if (!rawNext) return '/account'
-  if (rawNext === '/map') return '/explorar'
-  if (!rawNext.startsWith('/')) return '/account'
-  if (!allowedNextPaths.has(rawNext)) return '/account'
-  return rawNext
-}
-
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const next = normalizeNext(requestUrl.searchParams.get('next'))
+  const next = requestUrl.searchParams.get('next') || '/account'
 
   let response = NextResponse.redirect(new URL(next, requestUrl.origin))
 
